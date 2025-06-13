@@ -1,512 +1,339 @@
-# 🏛️ Cross-Domain Arbitrage Bot - Architecture Overview
+# 🏛️ Cross-Domain Arbitrage Bot - Hackathon Architecture
 
 ## 📋 Table of Contents
 
 1. [System Overview](#system-overview)
-2. [Component Architecture](#component-architecture)
+2. [Simplified Architecture](#simplified-architecture)
 3. [Data Flow](#data-flow)
 4. [Smart Contract Architecture](#smart-contract-architecture)
 5. [AI Agent Architecture](#ai-agent-architecture)
 6. [Chainlink Integration](#chainlink-integration)
 7. [SUAVE Integration](#suave-integration)
-8. [Security Architecture](#security-architecture)
-9. [Scalability Considerations](#scalability-considerations)
-10. [Failure Modes & Recovery](#failure-modes--recovery)
+8. [Local Development Setup](#local-development-setup)
 
 ## System Overview
 
-The Cross-Domain Arbitrage Bot is a sophisticated MEV (Maximal Extractable Value) system that automatically detects and executes profitable arbitrage opportunities between Arbitrum and Avalanche networks. The system ensures atomic execution across chains using Chainlink CCIP and protects against MEV attacks through SUAVE Helios bundling.
+The Cross-Domain Arbitrage Bot is a **simplified MEV system** designed for hackathon demonstration. It automatically detects and executes profitable arbitrage opportunities between Arbitrum and Avalanche networks using Chainlink CCIP and SUAVE Helios for MEV protection.
 
-### Key Principles
+### 🎯 Hackathon Objectives
 
-- **Atomicity**: All operations succeed together or fail together
-- **Profitability**: Only execute trades with guaranteed profit margins
-- **Security**: Multiple layers of validation and risk management
-- **Scalability**: Designed to handle high-frequency operations
-- **Transparency**: Full auditability while maintaining MEV protection
+- **Working Demo**: Demonstrate complete cross-chain arbitrage flow
+- **AI Integration**: Amazon Bedrock for intelligent decision making
+- **Chainlink Services**: Functions, Automation, and CCIP integration
+- **MEV Protection**: SUAVE bundle submission for atomic execution
+- **Real-time Monitoring**: Live dashboard for tracking operations
 
-## Component Architecture
+### Key Principles (Simplified)
+
+- **Functionality over Complexity**: Working flow over production-ready features
+- **Local Development**: No cloud deployment requirements
+- **Demo-Ready**: Visual monitoring and clear logging
+- **2-Week Timeline**: Rapid development and testing
+
+## Simplified Architecture
 
 ```mermaid
 graph TB
-    subgraph "AI Search Layer"
-        A1[Watcher Agent]
-        A2[Planner Agent]
-        A3[Risk Guard Agent]
+    subgraph "AI Agents (Python)"
+        A1[Watcher Agent<br/>agents/watcher.py]
+        A2[Planner Agent<br/>agents/planner.py] 
+        A3[Executor Agent<br/>agents/executor.py]
     end
     
-    subgraph "Plan Management"
-        B1[Chainlink Functions]
-        B2[PlanStore Contract]
-        B3[EdgeOracle Contract]
+    subgraph "Chainlink Services"
+        B1[Functions<br/>chainlink/functions/]
+        B2[Automation<br/>chainlink/automation/]
+        B3[CCIP Bridge]
     end
     
-    subgraph "Execution Layer"
-        C1[Chainlink Automation]
-        C2[BundleBuilder Contract]
-        C3[RemoteExecutor Contract]
-    end
-    
-    subgraph "Cross-Chain Layer"
-        D1[Chainlink CCIP]
-        D2[Data Streams]
+    subgraph "Smart Contracts"
+        C1[BundleBuilder<br/>contracts/src/]
+        C2[RemoteExecutor<br/>Avalanche]
     end
     
     subgraph "MEV Protection"
-        E1[SUAVE Helios]
-        E2[Bundle Auction]
+        D1[SUAVE Bundle<br/>suave/bundle_builder.py]
     end
     
     subgraph "Monitoring"
-        F1[Dashboard]
-        F2[Metrics Collector]
-        F3[Alert System]
+        E1[Dashboard<br/>monitoring/dashboard.py]
+        E2[SQLite DB<br/>arbitrage_data.db]
     end
     
     A1 --> A2
     A2 --> A3
-    A3 --> B1
+    A2 --> B1
     B1 --> B2
     B2 --> C1
-    C1 --> C2
-    C2 --> D1
-    D1 --> C3
-    C2 --> E1
-    E1 --> E2
-    C2 --> F2
-    C3 --> F2
-    F2 --> F1
-    F2 --> F3
-    
-    B3 --> C1
-    D2 --> B3
+    C1 --> D1
+    C1 --> B3
+    A3 --> E2
+    E2 --> E1
+    D1 --> E1
 ```
 
-### Component Responsibilities
+### Component Responsibilities (Hackathon Version)
 
-| Component | Purpose | Technology | Scalability |
-|-----------|---------|------------|-------------|
-| **Watcher Agent** | Monitor DEX pools and detect price discrepancies | Python + AWS Bedrock | Horizontal scaling via Lambda |
-| **Planner Agent** | Optimize arbitrage routes and calculate profits | Python + Tenderly Forks | Parallel plan generation |
-| **Risk Guard** | Assess risks and approve/reject plans | Python + KMS Signing | High availability cluster |
-| **PlanStore** | Store and manage arbitrage plans on-chain | Solidity | Gas-optimized storage |
-| **EdgeOracle** | Provide real-time price spread data | Solidity + Data Streams | Low-latency updates |
-| **BundleBuilder** | Execute first leg of arbitrage | Solidity | Transaction batching |
-| **RemoteExecutor** | Execute second leg on destination chain | Solidity | Parallel execution |
-| **CCIP Integration** | Handle cross-chain messaging | Chainlink CCIP | Built-in redundancy |
+| Component | Purpose | Technology | Implementation |
+|-----------|---------|------------|----------------|
+| **Watcher Agent** | Monitor prices and detect opportunities | Python + SQLite | Single file with basic monitoring |
+| **Planner Agent** | AI-powered plan generation | Python + Amazon Bedrock | Bedrock API integration |
+| **Executor Agent** | Coordinate execution flow | Python + Web3 | Simple orchestration logic |
+| **BundleBuilder** | Execute arbitrage trades | Solidity | Simplified contract with pseudo-code |
+| **SUAVE Integration** | MEV protection | Python + SUAVE API | Bundle creation and submission |
+| **Dashboard** | Real-time monitoring | FastAPI + HTML | Single-file web dashboard |
 
 ## Data Flow
 
-### 1. Opportunity Detection Flow
+### 1. Simplified Opportunity Detection Flow
 
 ```mermaid
 sequenceDiagram
     participant W as Watcher Agent
     participant P as Planner Agent
-    participant R as Risk Guard
-    participant CF as Chainlink Functions
-    participant PS as PlanStore
+    participant B as Amazon Bedrock
+    participant DB as SQLite Database
     
-    W->>W: Monitor DEX pools
+    W->>W: Monitor DEX prices
     W->>W: Detect price discrepancy
     W->>P: Send opportunity data
-    P->>P: Simulate trades on forks
-    P->>P: Calculate optimal route
-    P->>R: Request risk assessment
-    R->>R: Analyze risk factors
-    R->>R: Sign plan with KMS
-    R->>CF: Submit signed plan
-    CF->>PS: Store plan on-chain
-    PS->>PS: Emit PlanStored event
+    P->>B: AI validation request
+    B->>P: Approved/Rejected + confidence
+    P->>DB: Store approved plan
+    DB->>DB: Emit plan ready event
 ```
 
-### 2. Execution Flow
+### 2. Simplified Execution Flow
 
 ```mermaid
 sequenceDiagram
+    participant CF as Chainlink Functions
     participant Auto as Chainlink Automation
     participant BB as BundleBuilder
-    participant DEX1 as Origin DEX
+    participant SUAVE as SUAVE Bundle
     participant CCIP as Chainlink CCIP
-    participant RE as RemoteExecutor
-    participant DEX2 as Destination DEX
-    participant SUAVE as SUAVE Helios
+    participant Dashboard as Monitoring
     
-    Auto->>BB: checkUpkeep()
-    BB->>BB: Validate conditions
-    BB->>Auto: Return upkeepNeeded=true
-    Auto->>BB: performUpkeep()
-    BB->>DEX1: Execute swap (token A → token B)
-    BB->>CCIP: Send tokens + calldata
-    BB->>SUAVE: Submit bundle
-    CCIP->>RE: Deliver message
-    RE->>DEX2: Execute swap (token B → stable)
-    RE->>RE: Send profits to treasury
-    SUAVE->>SUAVE: Include in block or revert all
+    CF->>CF: Fetch approved plans from API
+    CF->>Auto: Trigger execution
+    Auto->>BB: Execute arbitrage
+    BB->>SUAVE: Submit MEV bundle
+    BB->>CCIP: Cross-chain message
+    SUAVE->>SUAVE: Include in block
+    BB->>Dashboard: Update execution status
 ```
 
 ## Smart Contract Architecture
 
-### Contract Hierarchy
+### Simplified Contract Structure
 
 ```
-BundleBuilder (Main Execution)
-├── PlanStore (Plan Management)
-├── EdgeOracle (Price Data)
-├── CCIP Integration
-└── Access Control
+BundleBuilder (Main Contract)
+├── Basic arbitrage execution
+├── CCIP integration
+├── Simple access control
+└── Event emission
 
 RemoteExecutor (Destination Chain)
-├── CCIP Receiver
-├── DEX Integration
-└── Treasury Management
+├── CCIP message receiver
+├── DEX swap execution
+└── Profit tracking
 ```
 
-### Key Design Patterns
-
-- **Upgradeable Proxy Pattern**: For contract upgrades without migration
-- **Access Control**: Role-based permissions (Admin, Executor, Emergency)
-- **Reentrancy Guards**: Protection against reentrancy attacks  
-- **Circuit Breakers**: Emergency stop mechanisms
-- **Gas Optimization**: Minimal storage writes, efficient algorithms
-
-### Storage Layout
+### Simplified Storage Layout
 
 ```solidity
-// PlanStore.sol
+// Simplified ArbPlan structure
 struct ArbPlan {
-    uint256 id;                    // Plan identifier
-    uint256 originChainId;         // Source blockchain
-    uint256 destinationChainId;    // Target blockchain
-    address tokenIn;               // Input token
-    address tokenOut;              // Output token
-    uint256 amountIn;              // Input amount
-    uint256 minAmountOut;          // Minimum output
-    uint256 minProfitBps;          // Profit threshold
-    uint256 maxGasPrice;           // Gas limit
-    uint256 deadline;              // Expiration time
-    uint64 ccipChainSelector;      // CCIP destination
-    bytes routeData;               // DEX route info
-    bytes32 planHash;              // Integrity hash
-    bool executed;                 // Execution status
+    address tokenIn;          // Input token
+    address tokenOut;         // Output token  
+    uint256 amountIn;         // Trade amount
+    uint256 expectedProfit;   // Expected profit
+    uint256 deadline;         // Execution deadline
+    uint64 targetChain;       // Destination chain
+    bool executed;            // Execution status
 }
 ```
 
 ## AI Agent Architecture
 
-### Multi-Agent System Design
+### Single-File Agent Design
 
 ```mermaid
 graph LR
-    subgraph "Watcher Agent"
-        W1[Pool Monitor]
-        W2[Price Tracker]
-        W3[Event Listener]
+    subgraph "agents/watcher.py"
+        W1[Price Monitoring]
+        W2[Opportunity Detection]
+        W3[SQLite Storage]
     end
     
-    subgraph "Planner Agent"
-        P1[Route Optimizer]
-        P2[Profit Calculator]
-        P3[Simulation Engine]
+    subgraph "agents/planner.py"
+        P1[Size Optimization]
+        P2[Amazon Bedrock AI]
+        P3[Plan Generation]
     end
     
-    subgraph "Risk Guard"
-        R1[Risk Assessor]
-        R2[Gas Monitor]
-        R3[KMS Signer]
+    subgraph "agents/executor.py"
+        E1[Plan Monitoring]
+        E2[Execution Coordination]
+        E3[Status Tracking]
     end
     
-    subgraph "Shared Services"
-        S1[Message Queue]
-        S2[State Management]
-        S3[Configuration]
-    end
-    
-    W1 --> S1
-    W2 --> S1
-    W3 --> S1
-    S1 --> P1
-    S1 --> P2
-    S1 --> P3
-    P3 --> S1
-    S1 --> R1
-    S1 --> R2
-    R1 --> R3
-    
-    S2 --> W1
-    S2 --> P1
-    S2 --> R1
-    S3 --> W1
-    S3 --> P1
-    S3 --> R1
+    W1 --> W2
+    W2 --> W3
+    W3 --> P1
+    P1 --> P2
+    P2 --> P3
+    P3 --> E1
+    E1 --> E2
+    E2 --> E3
 ```
 
-### Agent Communication Patterns
+### AI Integration Points
 
-- **Event-Driven**: Agents react to blockchain events and market changes
-- **Message Passing**: Asynchronous communication via Redis/SQS
-- **State Synchronization**: Shared state through Redis for consistency
-- **Circuit Breakers**: Agents can disable themselves in error conditions
-
-### Bedrock Integration
-
-```python
-# Pseudo-code for Bedrock agent interaction
-class BedrockAgent:
-    def __init__(self, model_id: str):
-        self.bedrock = boto3.client('bedrock-runtime')
-        self.model_id = model_id
-    
-    async def analyze_opportunity(self, market_data: Dict) -> ArbitragePlan:
-        prompt = self.build_analysis_prompt(market_data)
-        response = await self.bedrock.invoke_model(
-            modelId=self.model_id,
-            body=json.dumps({"prompt": prompt})
-        )
-        return self.parse_response(response)
-```
+1. **Amazon Bedrock Claude**: Plan validation and optimization
+2. **Simple Logic**: Basic slippage and gas estimation
+3. **Local SQLite**: Data persistence without external dependencies
+4. **Async Processing**: Non-blocking operation handling
 
 ## Chainlink Integration
 
 ### Functions Integration
-
 ```javascript
-// Chainlink Functions source code structure
+// Simplified Functions source
 const source = `
-// Data fetching from Bedrock endpoint
-const bedrockResponse = await Functions.makeHttpRequest({
-    url: bedrockEndpoint,
-    method: "GET",
-    headers: { "Authorization": "Bearer " + secrets.bedrockToken }
+// Fetch approved plans from local API
+const response = await Functions.makeHttpRequest({
+    url: "http://localhost:8080/api/approved-plans"
 });
 
-// Signature verification
-const planData = bedrockResponse.data;
-const isValidSignature = verifyKMSSignature(
-    planData.planHash, 
-    planData.signature,
-    secrets.kmsPublicKey
-);
-
-if (!isValidSignature) {
-    throw new Error("Invalid plan signature");
-}
-
-// Return encoded plan data
-return Functions.encodeBytes32String(JSON.stringify(planData));
+// Return best plan for execution
+return Functions.encodeString(JSON.stringify(bestPlan));
 `;
 ```
 
-### Automation Integration
-
-```solidity
-// Automation upkeep logic
-function checkUpkeep(bytes calldata checkData) 
-    external view returns (bool upkeepNeeded, bytes memory performData) {
-    
-    uint256 planId = abi.decode(checkData, (uint256));
-    ArbPlan memory plan = planStore.getPlan(planId);
-    
-    // Check execution conditions
-    bool gasOk = tx.gasprice <= plan.maxGasPrice;
-    bool deadlineOk = block.timestamp <= plan.deadline;
-    bool profitOk = edgeOracle.deltaEdge(plan.tokenIn, plan.tokenOut) >= plan.minProfitBps;
-    bool notExecuted = !plan.executed;
-    
-    upkeepNeeded = gasOk && deadlineOk && profitOk && notExecuted;
-    performData = abi.encode(planId, plan);
-}
+### Automation Setup
+```javascript
+// Register upkeep for plan execution
+const upkeepConfig = {
+    name: "Cross-Chain Arbitrage Bot",
+    upkeepContract: bundleBuilderAddress,
+    gasLimit: 500000,
+    amount: ethers.utils.parseEther("5") // 5 LINK
+};
 ```
 
-### Data Streams Integration
-
-```solidity
-// Real-time price feed integration
-interface IDataStreams {
-    function getPrice(bytes32 feedId) external view returns (uint256 price, uint256 timestamp);
-    function getPrices(bytes32[] calldata feedIds) external view returns (uint256[] memory, uint256[] memory);
-}
-
-contract EdgeOracle {
-    IDataStreams public immutable dataStreams;
-    
-    function deltaEdge(address tokenA, address tokenB) external view returns (uint256) {
-        bytes32 feedA = tokenToFeedId[tokenA];
-        bytes32 feedB = tokenToFeedId[tokenB];
-        
-        (uint256 priceA,) = dataStreams.getPrice(feedA);
-        (uint256 priceB,) = dataStreams.getPrice(feedB);
-        
-        // Calculate price difference in basis points
-        return calculateBasisPointsDiff(priceA, priceB);
-    }
-}
-```
+### CCIP Configuration
+- **Source Chain**: Arbitrum Sepolia
+- **Destination Chain**: Avalanche Fuji  
+- **Token Bridging**: WETH, USDC
+- **Message Passing**: Execution instructions
 
 ## SUAVE Integration
 
-### Bundle Building
+### Bundle Creation Process
 
 ```python
-# SUAVE bundle creation
-class SUAVEBundleBuilder:
-    def __init__(self, kettle_rpc: str):
-        self.w3 = Web3(Web3.HTTPProvider(kettle_rpc))
-    
-    async def create_arbitrage_bundle(self, plan: ArbitragePlan) -> Dict:
-        bundle = {
-            "version": "v0.1",
-            "inclusion": {
-                "block": "latest",
-                "maxBlock": "latest+2"
-            },
-            "body": [
-                {
-                    "tx": self.build_origin_tx(plan),
-                    "canRevert": False
-                },
-                {
-                    "tx": self.build_ccip_tx(plan),
-                    "canRevert": False  
-                }
-            ]
+# Simplified bundle structure
+bundle = {
+    "version": "v0.1",
+    "inclusion": {"block": "latest", "maxBlock": "latest+2"},
+    "body": [{
+        "tx": {
+            "to": bundleBuilderAddress,
+            "data": executeCallData,
+            "gasLimit": "0x7A120"
         }
-        return bundle
-    
-    async def submit_bundle(self, bundle: Dict) -> str:
-        response = await self.w3.manager.request_async(
-            "mev_sendBundle", [bundle]
-        )
-        return response["bundleHash"]
-```
-
-### Auction Mechanism
-
-- **Sealed Bid Auction**: Bundles are submitted with hidden bid amounts
-- **Block Builder Integration**: Multiple builders compete for inclusion
-- **Atomic Execution**: All transactions in bundle execute together or revert
-- **MEV Protection**: Transaction details hidden until block execution
-
-## Security Architecture
-
-### Multi-Layer Security
-
-1. **Input Validation**
-   - Parameter bounds checking
-   - Signature verification
-   - Plan integrity validation
-
-2. **Access Control**
-   - Role-based permissions
-   - Multi-signature requirements
-   - Time-locked admin functions
-
-3. **Economic Security**
-   - Slippage protection
-   - Gas price limits
-   - Profit thresholds
-
-4. **Technical Security**
-   - Reentrancy guards
-   - Integer overflow protection
-   - External call safety
-
-### Risk Management
-
-```solidity
-contract RiskManager {
-    struct RiskParameters {
-        uint256 maxSlippageBps;      // Maximum slippage allowed
-        uint256 maxGasMultiplier;    // Gas price safety factor
-        uint256 maxTradeSize;        // Position size limit
-        uint256 cooldownPeriod;      // Time between trades
-    }
-    
-    function validateExecution(ArbPlan memory plan) external view {
-        require(plan.minProfitBps >= riskParams.minProfitBps, "Insufficient profit");
-        require(plan.amountIn <= riskParams.maxTradeSize, "Trade size too large");
-        require(block.timestamp >= lastExecution + riskParams.cooldownPeriod, "Cooldown active");
-    }
+    }]
 }
 ```
 
-## Scalability Considerations
+### MEV Protection Features
+- **Bundle Submission**: Atomic transaction grouping
+- **Privacy**: Hide transaction content until inclusion
+- **Revert Protection**: All-or-nothing execution
+- **Fair Ordering**: Protection against frontrunning
 
-### Horizontal Scaling
+## Local Development Setup
 
-- **AI Agents**: Serverless Lambda functions for unlimited scaling
-- **Database**: Sharded PostgreSQL for high throughput
-- **Cache Layer**: Redis clustering for low-latency access
-- **Message Queue**: SQS/SNS for reliable message delivery
+### Database Architecture
+```sql
+-- SQLite tables for hackathon
+CREATE TABLE price_data (
+    id INTEGER PRIMARY KEY,
+    chain TEXT,
+    dex TEXT,
+    token_pair TEXT,
+    price REAL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
 
-### Vertical Optimization
+CREATE TABLE opportunities (
+    id INTEGER PRIMARY KEY,
+    token TEXT,
+    chain_a TEXT,
+    chain_b TEXT,
+    price_a REAL,
+    price_b REAL,
+    spread_bps INTEGER,
+    profit_estimate REAL,
+    status TEXT DEFAULT 'detected',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
 
-- **Smart Contracts**: Gas-optimized assembly where needed
-- **Data Structures**: Efficient packing and storage patterns
-- **Algorithms**: O(1) lookups where possible
-- **Batch Processing**: Group operations to reduce overhead
+CREATE TABLE arbitrage_plans (
+    plan_id TEXT PRIMARY KEY,
+    token TEXT,
+    trade_size_usd REAL,
+    expected_profit REAL,
+    status TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
 
-### Performance Metrics
-
-- **Latency**: < 100ms from opportunity detection to execution
-- **Throughput**: 1000+ opportunities processed per minute
-- **Availability**: 99.9% uptime with automatic failover
-- **Accuracy**: < 0.1% false positive rate for opportunities
-
-## Failure Modes & Recovery
-
-### Failure Scenarios
-
-1. **AI Agent Failures**
-   - **Detection**: Health checks and heartbeats
-   - **Recovery**: Automatic restart and state restoration
-   - **Fallback**: Manual override capabilities
-
-2. **Network Congestion**
-   - **Detection**: Gas price monitoring
-   - **Recovery**: Dynamic gas pricing
-   - **Fallback**: Pause execution until congestion clears
-
-3. **Smart Contract Issues**
-   - **Detection**: Failed transaction monitoring
-   - **Recovery**: Emergency pause and investigation
-   - **Fallback**: Upgrade path through proxy contracts
-
-4. **Cross-Chain Bridge Delays**
-   - **Detection**: Message delivery timeouts
-   - **Recovery**: Retry mechanisms with exponential backoff
-   - **Fallback**: Manual intervention tools
-
-### Recovery Mechanisms
-
-```solidity
-contract EmergencyManager {
-    event EmergencyPause(string reason, uint256 timestamp);
-    event EmergencyResume(uint256 timestamp);
-    
-    bool public emergencyPaused;
-    mapping(address => bool) public emergencyOperators;
-    
-    modifier whenNotPaused() {
-        require(!emergencyPaused, "Emergency pause active");
-        _;
-    }
-    
-    function emergencyPause(string calldata reason) external {
-        require(emergencyOperators[msg.sender], "Not authorized");
-        emergencyPaused = true;
-        emit EmergencyPause(reason, block.timestamp);
-    }
-}
+CREATE TABLE executions (
+    id INTEGER PRIMARY KEY,
+    plan_id TEXT,
+    tx_hash TEXT,
+    expected_profit REAL,
+    actual_profit REAL,
+    status TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
 ```
 
-### Monitoring & Alerting
+### File Structure
+```
+├── agents/
+│   ├── watcher.py      # Price monitoring
+│   ├── planner.py      # AI planning with Bedrock
+│   └── executor.py     # Execution coordination
+├── chainlink/
+│   ├── functions/      # Chainlink Functions
+│   └── automation/     # Chainlink Automation
+├── contracts/
+│   └── src/           # Simplified smart contracts
+├── suave/
+│   └── bundle_builder.py  # MEV protection
+├── monitoring/
+│   └── dashboard.py    # Web dashboard
+└── scripts/
+    └── test_full_flow.py  # End-to-end testing
+```
 
-- **Real-time Dashboards**: Key metrics and system health
-- **Automated Alerts**: Slack/Discord notifications for issues
-- **Performance Tracking**: Historical data and trend analysis
-- **Audit Logs**: Complete transaction and decision history
+### Development Workflow
 
----
+1. **Local Setup**: SQLite database and Python virtual environment
+2. **Agent Testing**: Individual component testing with mock data
+3. **Integration Testing**: Full flow testing with `scripts/test_full_flow.py`
+4. **Dashboard Monitoring**: Real-time visualization at `localhost:8080`
+5. **Contract Deployment**: Testnet deployment for Chainlink integration
 
-This architecture provides a robust, scalable, and secure foundation for cross-domain arbitrage operations while maintaining the flexibility to adapt to changing market conditions and technological advances. 
+### Performance Expectations
+
+- **Opportunity Detection**: ~5-10 seconds
+- **AI Plan Generation**: ~2-5 seconds  
+- **Bundle Creation**: ~1-2 seconds
+- **Cross-chain Execution**: ~30-60 seconds
+- **Total Flow Time**: ~1-2 minutes per opportunity
+
+This simplified architecture enables rapid development and demonstration while maintaining the core cross-chain arbitrage functionality with AI decision-making and MEV protection. 

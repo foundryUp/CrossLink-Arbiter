@@ -1,148 +1,57 @@
 version: '3.8'
 
 services:
-  # Database
-  postgres:
-    image: postgres:15-alpine
-    container_name: arbitrage-postgres
-    environment:
-      POSTGRES_DB: arbitrage_bot
-      POSTGRES_USER: arbitrage_user
-      POSTGRES_PASSWORD: arbitrage_password
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./scripts/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U arbitrage_user -d arbitrage_bot"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # Redis for caching and queues
-  redis:
-    image: redis:7-alpine
-    container_name: arbitrage-redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    command: redis-server --appendonly yes
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # Monitoring stack
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: arbitrage-prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-      - '--web.enable-lifecycle'
-
-  grafana:
-    image: grafana/grafana:latest
-    container_name: arbitrage-grafana
-    ports:
-      - "3000:3000"
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
-      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_USERS_ALLOW_SIGN_UP=false
-    depends_on:
-      - prometheus
-
-  # Local blockchain for development
-  anvil:
-    image: ghcr.io/foundry-rs/foundry:latest
-    container_name: arbitrage-anvil
-    ports:
-      - "8545:8545"
-    command: anvil --host 0.0.0.0 --port 8545 --chain-id 31337
-    
-  # AI Agents (development)
-  agents:
-    build:
-      context: .
-      dockerfile: agents/Dockerfile
-    container_name: arbitrage-agents
-    environment:
-      - PYTHONPATH=/app
-      - ENV=development
-    volumes:
-      - ./agents:/app/agents
-      - ./config:/app/config
-      - ./.env:/app/.env
-    depends_on:
-      - postgres
-      - redis
-    restart: unless-stopped
-
-  # Monitoring Dashboard
+  # Simple local dashboard (optional)
   dashboard:
     build:
       context: .
-      dockerfile: monitoring/Dockerfile
-    container_name: arbitrage-dashboard
+      dockerfile: Dockerfile.dashboard
     ports:
-      - "8080:8080"
+      - "${DASHBOARD_PORT:-8080}:8080"
     environment:
-      - PYTHONPATH=/app
-      - ENV=development
+      - NODE_ENV=development
+      - DB_PATH=/app/data/arbitrage_data.db
     volumes:
-      - ./monitoring:/app/monitoring
-      - ./config:/app/config
-      - ./.env:/app/.env
+      - ./data:/app/data
+      - ./logs:/app/logs
     depends_on:
-      - postgres
-      - redis
+      - watcher
     restart: unless-stopped
 
-  # SUAVE Local Node (for testing)
-  suave-node:
-    image: flashbots/suave-geth:latest
-    container_name: arbitrage-suave
+  # Price watcher service
+  watcher:
+    build:
+      context: .
+      dockerfile: Dockerfile.watcher
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DB_PATH=/app/data/arbitrage_data.db
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./config:/app/config
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  # Optional: Simple log viewer
+  logs:
+    image: amir20/dozzle:latest
+    container_name: arbitrage-logs
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     ports:
-      - "8546:8546"
-      - "8547:8547"
-    command: >
-      --dev
-      --http
-      --http.addr=0.0.0.0
-      --http.port=8546
-      --http.api=eth,net,web3,debug,admin,txpool,miner
-      --ws
-      --ws.addr=0.0.0.0
-      --ws.port=8547
-      --ws.api=eth,net,web3,debug,admin,txpool,miner
-      --allow-insecure-unlock
-      --rpc.allow-unprotected-txs
+      - "9999:8080"
+    profiles:
+      - monitoring
 
 volumes:
-  postgres_data:
+  data:
     driver: local
-  redis_data:
-    driver: local
-  prometheus_data:
-    driver: local
-  grafana_data:
+  logs:
     driver: local
 
 networks:
   default:
-    name: arbitrage-network
-    driver: bridge 
+    name: arbitrage-network 

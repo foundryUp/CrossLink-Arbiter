@@ -1,250 +1,251 @@
-# 👥 Team Task Division - Cross-Domain Arbitrage Bot
+# 👥 Team Tasks - Cross-Chain Arbitrage Bot (3 Developers)
 
-## 🎯 Project Timeline: 4-5 Weeks
+## 🎯 Project Overview
 
-This document divides the project into 4 specialized development tracks for optimal parallel development.
+**Cross-Domain MEV Bot** with AI decision-making, Chainlink services integration, and SUAVE MEV protection.
 
----
+**Timeline**: 4-5 weeks  
+**Team Size**: 3 developers  
+**Focus**: Production-ready arbitrage bot with comprehensive features
 
-## 👨‍💻 Developer 1: Smart Contracts & Foundry Lead
-**Duration:** 4 weeks | **Expertise:** Solidity, Foundry, MEV
+## 👨‍💻 Team Structure
 
-### Week 1: Core Infrastructure
-- [ ] Setup Foundry project structure
-- [ ] Implement `IBundleBuilder` interface
-- [ ] Create `PlanStore` contract for plan management
-- [ ] Implement `EdgeOracle` with Data Streams integration
-- [ ] Setup comprehensive test suite
+### Developer 1: Smart Contracts & Core Infrastructure
+**Primary Focus**: Smart contract development, Foundry setup, and SUAVE integration
 
-### Week 2: Execution Logic
-- [ ] Implement `BundleBuilder` main execution contract
-- [ ] Add DEX integration (SushiSwap, Uniswap V3)
-- [ ] Implement CCIP sending functionality
-- [ ] Create `RemoteExecutor` for Avalanche
-- [ ] Add emergency stop mechanisms
+### Developer 2: AI Agents & Backend Systems
+**Primary Focus**: AI-powered opportunity detection, Amazon Bedrock integration, and monitoring
 
-### Week 3: Advanced Features
-- [ ] Implement risk management systems
-- [ ] Add gas optimization techniques
-- [ ] Create upgrade proxy patterns
-- [ ] Implement access control systems
-- [ ] Add comprehensive event logging
+### Developer 3: Chainlink Services & System Integration
+**Primary Focus**: Chainlink Functions, Automation, CCIP, Data Streams, and full system integration
 
-### Week 4: Testing & Deployment
-- [ ] Write comprehensive unit tests
-- [ ] Conduct fork testing on mainnet forks
-- [ ] Deploy to testnets (Arbitrum Sepolia, Avalanche Fuji)
-- [ ] Perform gas optimization analysis
-- [ ] Create deployment scripts and documentation
+## 📅 Development Timeline
 
-### Key Deliverables:
-- ✅ Fully tested smart contract suite
-- ✅ Deployment scripts for testnet/mainnet
-- ✅ Gas optimization report
-- ✅ Security audit preparation
+### Week 1: Foundation & Core Setup
 
----
+#### Developer 1: Smart Contracts Foundation
+**Tasks:**
+- Set up Foundry development environment
+- Implement core interfaces:
+  - `IBundleBuilder.sol`
+  - `IPlanStore.sol` 
+  - `IEdgeOracle.sol`
+- Create basic `BundleBuilder.sol` contract structure
+- Write initial unit tests and deployment scripts
 
-## 🤖 Developer 2: AI Agents & Bedrock Integration Lead
-**Duration:** 4 weeks | **Expertise:** Python, AWS, ML/AI
+#### Developer 2: AI Architecture Setup
+**Tasks:**
+- Set up Amazon Bedrock development environment
+- Implement shared data models (`agents/shared/models.py`)
+- Create Watcher Agent skeleton for pool monitoring
+- Set up DEX data collection pipeline and database schema
 
-### Week 1: Agent Architecture
-- [ ] Setup AWS Bedrock development environment
-- [ ] Implement core data models (`models.py`)
-- [ ] Create base agent classes and communication patterns
-- [ ] Setup Redis for inter-agent communication
-- [ ] Implement configuration management
+#### Developer 3: Chainlink Services Setup
+**Tasks:**
+- Set up Chainlink Functions development environment
+- Research and design plan ingress architecture
+- Set up Chainlink Automation environment
+- Create initial upkeep contract structure
 
-### Week 2: Watcher Agent
-- [ ] Implement pool monitoring system
-- [ ] Create price tracking mechanisms
-- [ ] Setup blockchain event listeners
-- [ ] Implement opportunity detection algorithms
-- [ ] Add real-time data processing
+### Week 2: Core Component Development
 
-### Week 3: Planner & Risk Guard
-- [ ] Implement route optimization using Bedrock
-- [ ] Create profit calculation engine
-- [ ] Setup Tenderly fork simulation
-- [ ] Implement risk assessment logic
-- [ ] Add AWS KMS signing functionality
+#### Developer 1: Contract Logic Implementation
+**Tasks:**
+- Implement bundle building logic in `BundleBuilder.sol`
+- Add price validation and slippage protection
+- Implement atomic swap mechanisms
+- Create gas optimization strategies
+- Begin CCIP integration for cross-chain messaging
 
-### Week 4: Integration & Optimization
-- [ ] Integrate all agents into cohesive system
-- [ ] Implement error handling and retry logic
-- [ ] Add comprehensive logging and monitoring
-- [ ] Performance optimization and scaling
-- [ ] Create agent deployment scripts
+#### Developer 2: AI Agents Development
+**Tasks:**
+- Implement pool monitoring logic (`agents/watcher/pool_monitor.py`)
+- Add price difference detection algorithms
+- Create real-time data processing pipeline
+- Integrate with multiple DEX APIs (Uniswap, Trader Joe, etc.)
 
-### Key Deliverables:
-- ✅ Three working AI agents (Watcher, Planner, Risk Guard)
-- ✅ AWS Bedrock integration
-- ✅ KMS signing system
-- ✅ Agent orchestration framework
+#### Developer 3: Chainlink Functions Implementation
+**Tasks:**
+- Implement plan ingress functions (Bedrock → on-chain)
+- Create off-chain computation scripts
+- Develop Functions source code for AI plan fetching
+- Test Functions on testnets
 
----
+### Week 3: Advanced Features & Integration
 
-## 🔗 Developer 3: Chainlink Services & CCIP Lead
-**Duration:** 4 weeks | **Expertise:** Chainlink, Node.js, Cross-chain
+#### Developer 1: Cross-Chain & SUAVE Integration
+**Tasks:**
+- Complete Chainlink CCIP integration
+- Implement bridge logic and message handling
+- Set up SUAVE development environment
+- Begin MEV protection implementation
 
-### Week 1: Functions Integration
-- [ ] Setup Chainlink Functions development environment
-- [ ] Implement Functions source code for plan ingestion
-- [ ] Create subscription and consumer contracts
-- [ ] Setup DON (Decentralized Oracle Network) integration
-- [ ] Implement signature verification in Functions
+#### Developer 2: Advanced AI Features
+**Tasks:**
+- Develop Planner Agent for strategy optimization
+- Implement Risk Guard Agent for validation
+- Add machine learning models for profit prediction
+- Create agent coordination and communication system
 
-### Week 2: Automation System
-- [ ] Setup Chainlink Automation (Upkeep)
-- [ ] Implement `checkUpkeep` logic
-- [ ] Create automation registration scripts
-- [ ] Setup conditional execution triggers
-- [ ] Implement gas-efficient automation patterns
+#### Developer 3: Chainlink Automation & Data Streams
+**Tasks:**
+- Implement upkeep contracts with conditional execution
+- Add automated execution triggers (performUpkeep logic)
+- Integrate Chainlink Data Streams for live pricing
+- Create cross-chain state management
 
-### Week 3: CCIP & Data Streams
-- [ ] Implement CCIP cross-chain messaging
-- [ ] Setup message routing between Arbitrum/Avalanche
-- [ ] Integrate Data Streams for real-time prices
-- [ ] Create price feed management system
-- [ ] Implement cross-chain state synchronization
+### Week 4: Full System Integration
 
-### Week 4: Integration & Testing
-- [ ] Integrate all Chainlink services
-- [ ] Test cross-chain message delivery
-- [ ] Implement error handling and retries
-- [ ] Setup monitoring for Chainlink services
-- [ ] Create service deployment guides
+#### Developer 1: SUAVE & Testing
+**Tasks:**
+- Complete SUAVE block auction implementation
+- Comprehensive smart contract testing
+- Deploy to Arbitrum and Avalanche testnets
+- Security testing and optimization
 
-### Key Deliverables:
-- ✅ Chainlink Functions integration
-- ✅ Automation system for execution triggers
-- ✅ CCIP cross-chain messaging
-- ✅ Data Streams price feeds
+#### Developer 2: Monitoring & Integration
+**Tasks:**
+- Implement comprehensive monitoring dashboard
+- Add alerting and notification systems
+- Integrate agents with Chainlink Functions
+- Performance optimization and testing
 
----
+#### Developer 3: End-to-End Integration
+**Tasks:**
+- Connect all Chainlink services together
+- Full system integration testing
+- Cross-chain flow testing
+- Performance benchmarking
 
-## 📊 Developer 4: SUAVE Integration & Monitoring Lead
-**Duration:** 4 weeks | **Expertise:** SUAVE, MEV, Monitoring, DevOps
+### Week 5: Optimization & Deployment
 
-### Week 1: SUAVE Integration
-- [ ] Setup SUAVE development environment
-- [ ] Implement bundle building logic
-- [ ] Create SUAVE auction client
-- [ ] Setup Kettle RPC integration
-- [ ] Implement MEV protection mechanisms
+#### All Developers: Final Push
+**Tasks:**
+- Final integration testing and bug fixes
+- Gas optimization and security auditing
+- Documentation completion
+- Demo preparation and deployment
 
-### Week 2: Bundle Optimization
-- [ ] Implement atomic bundle creation
-- [ ] Add transaction ordering optimization
-- [ ] Create bid strategy algorithms
-- [ ] Setup bundle simulation and testing
-- [ ] Implement failure handling
+## 🔧 Technical Flow Explanation
 
-### Week 3: Monitoring Dashboard
-- [ ] Create FastAPI/Flask monitoring dashboard
-- [ ] Implement real-time metrics collection
-- [ ] Setup Prometheus/Grafana integration
-- [ ] Create profit tracking system
-- [ ] Add alert system (Discord/Telegram)
-
-### Week 4: Infrastructure & Deployment
-- [ ] Setup Docker containerization
-- [ ] Create CI/CD pipelines
-- [ ] Implement production monitoring
-- [ ] Setup logging and error tracking
-- [ ] Create operational runbooks
-
-### Key Deliverables:
-- ✅ SUAVE bundle system
-- ✅ MEV protection implementation
-- ✅ Comprehensive monitoring dashboard
-- ✅ Production-ready infrastructure
-
----
-
-## 🔄 Cross-Team Collaboration
-
-### Daily Standups (15 min)
-- **Time:** 9:00 AM UTC
-- **Format:** Progress, blockers, dependencies
-- **Tools:** Slack/Discord
-
-### Weekly Integration Sessions (2 hours)
-- **Time:** Friday 2:00 PM UTC
-- **Purpose:** Component integration and testing
-- **Deliverable:** Working system demo
-
-### Communication Channels
-- **Slack/Discord:** Real-time communication
-- **GitHub:** Code collaboration and issue tracking
-- **Notion/Linear:** Task management and documentation
-
----
-
-## 📅 Milestone Schedule
-
-### Week 1 Milestone: Foundation
-- [ ] All development environments setup
-- [ ] Basic component skeletons implemented
-- [ ] Communication infrastructure established
-
-### Week 2 Milestone: Core Functionality
-- [ ] Smart contracts deployed to testnet
-- [ ] AI agents detecting opportunities
-- [ ] Chainlink services operational
-
-### Week 3 Milestone: Integration
-- [ ] End-to-end system integration
-- [ ] Cross-chain messaging working
-- [ ] SUAVE bundling functional
-
-### Week 4 Milestone: Production Ready
-- [ ] Comprehensive testing completed
-- [ ] Monitoring and alerting operational
-- [ ] Documentation and deployment guides
-
-### Week 5 Milestone: Optimization & Launch
-- [ ] Performance optimization
-- [ ] Security audit completion
-- [ ] Mainnet deployment (if approved)
-
----
-
-## 🛠️ Shared Resources
-
-### Development Tools
-- **Git Repository:** GitHub with branch protection
-- **CI/CD:** GitHub Actions
-- **Testing:** Automated test suites
-- **Documentation:** README, API docs, architecture guides
-
-### Testing Strategy
-- **Unit Tests:** Each component individually tested
-- **Integration Tests:** Cross-component functionality
-- **End-to-End Tests:** Full arbitrage simulation
-- **Performance Tests:** Load and stress testing
-
-### Dependencies & Handoffs
+### How Amazon Bedrock → Chainlink Functions → Chainlink Automation Works
 
 ```mermaid
-graph LR
-    A[Dev 1: Contracts] --> B[Dev 3: Chainlink]
-    A --> D[Dev 4: Monitoring]
-    B --> C[Dev 2: AI Agents]
-    C --> D
-    B --> D
+graph TD
+    A[Amazon Bedrock Agents] --> B[Detect Profitable Opportunity]
+    B --> C[Generate Arbitrage Plan]
+    C --> D[Chainlink Functions - Plan Ingress]
+    D --> E[Store Plan On-Chain]
+    E --> F[Chainlink Automation - Monitor Conditions]
+    F --> G[performUpkeep Triggered]
+    G --> H[Execute Arbitrage via BundleBuilder]
+    H --> I[Cross-Chain Execution via CCIP]
+    I --> J[Profit Realization & Monitoring]
 ```
 
----
+#### Detailed Technical Connection:
 
-## 🎯 Success Metrics
+1. **Amazon Bedrock (Off-Chain AI)**
+   - Watcher Agent monitors DEX prices across Arbitrum & Avalanche
+   - Detects price discrepancies > threshold (e.g., 50 basis points)
+   - Planner Agent calculates optimal trade size and profit
+   - Risk Guard validates the opportunity
 
-- [ ] **Functionality:** System successfully executes profitable arbitrage
-- [ ] **Performance:** <100ms latency from detection to execution
-- [ ] **Reliability:** 99.9% uptime with automatic failover
-- [ ] **Profitability:** Consistent positive returns after gas costs
-- [ ] **Security:** No exploits or unauthorized access
+2. **Chainlink Functions (Plan Ingress)**
+   ```javascript
+   // chainlink/functions/source.js
+   const response = await Functions.makeHttpRequest({
+     url: "https://bedrock-api.example.com/get-plan",
+     method: "GET"
+   });
+   
+   return Functions.encodeString(JSON.stringify(response.data));
+   ```
+   - Functions periodically fetch approved plans from Bedrock
+   - Brings off-chain AI decisions on-chain
+   - Stores plan in `PlanStore` smart contract
 
----
+3. **Chainlink Automation (Execution Trigger)**
+   ```solidity
+   function checkUpkeep(bytes calldata) external view override 
+   returns (bool upkeepNeeded, bytes memory performData) {
+       ArbitragePlan memory plan = planStore.getLatestPlan();
+       bool conditionsMet = checkMarketConditions(plan);
+       bool timeWindowOpen = block.timestamp >= plan.executionTime;
+       
+       upkeepNeeded = conditionsMet && timeWindowOpen;
+       performData = abi.encode(plan.id);
+   }
+   
+   function performUpkeep(bytes calldata performData) external override {
+       uint256 planId = abi.decode(performData, (uint256));
+       bundleBuilder.executeArbitrage(planId);
+   }
+   ```
+   - Monitors on-chain conditions (price, time, gas)
+   - Automatically triggers execution when conditions are met
+   - Calls `BundleBuilder.executeArbitrage()` to perform trades
 
-**Ready to build the future of cross-chain MEV? Let's ship this! 🚀** 
+## 🎯 Critical Integration Points
+
+### Week 2 Milestone
+- Smart contracts + Chainlink Functions integration
+- AI agents producing valid arbitrage plans
+- Basic on-chain plan storage working
+
+### Week 3 Milestone  
+- Chainlink Automation triggering executions
+- Cross-chain messaging via CCIP functional
+- End-to-end flow from detection to execution
+
+### Week 4 Milestone
+- SUAVE MEV protection integrated
+- Full monitoring and alerting system
+- Production-ready deployment
+
+## 📊 Success Metrics
+
+- **Detection Latency**: < 500ms for price discrepancy detection
+- **Execution Speed**: < 30 seconds from trigger to completion
+- **Profit Accuracy**: > 90% of predicted vs actual profit
+- **Success Rate**: > 95% of triggered executions complete successfully
+
+## 🚨 Risk Mitigation
+
+### Technical Risks
+- **Cross-chain latency**: Early CCIP testing and optimization
+- **AI model accuracy**: Continuous backtesting and validation
+- **MEV competition**: SUAVE integration and bundle protection
+- **Gas optimization**: Regular benchmarking and optimization
+
+### Coordination Risks
+- **Daily standups**: 15-minute sync meetings
+- **Weekly integration**: Friday full-team integration testing
+- **Shared documentation**: Real-time updates in project wiki
+
+## 🎯 Demo Scenarios
+
+### Primary Demo Flow
+1. **Show Dashboard**: `http://localhost:8080`
+2. **Trigger Opportunity**: Run price monitoring
+3. **AI Planning**: Display Bedrock integration
+4. **Chainlink Execution**: Show Functions/Automation
+5. **SUAVE Protection**: Bundle creation
+6. **Cross-chain**: CCIP message flow
+7. **Results**: Dashboard updates with profits
+
+### Backup Demo Components
+- **Static Data**: Pre-generated opportunities
+- **Mock APIs**: Simulated external services
+- **Recorded Flows**: Video backup of working system
+
+## 📈 Post-Hackathon Roadmap
+
+### Potential Enhancements
+1. **Production Security**: KMS integration, multi-sig
+2. **Advanced AI**: ML models, predictive analytics
+3. **Multi-DEX Support**: More arbitrage opportunities
+4. **Gas Optimization**: Dynamic gas pricing
+5. **Real-time Alerts**: Discord/Slack notifications
+
+This simplified team structure ensures rapid development while maintaining all core functionalities for a compelling hackathon demonstration! 🚀 

@@ -1,139 +1,274 @@
-# Cross-Domain Arbitrage Bot Project Structure
+# Cross-Domain Arbitrage Bot Project Structure (Hackathon Edition)
+
+## 📁 Simplified Structure
 
 ```
 chainlink-arbitrage-bot/
-├── README.md                           # Main project overview and setup
-├── .env.example                        # Environment variables template
-├── .gitignore                          # Git ignore file
-├── package.json                        # Node.js dependencies
-├── requirements.txt                    # Python dependencies
-├── docker-compose.yml                  # Docker setup for development
-├── Makefile                           # Build and deployment commands
+├── README.md                          # Main project overview and setup
+├── .env.example                       # Environment variables template
+├── .gitignore                         # Git ignore file
+├── package.json                       # Node.js dependencies
+├── requirements.txt                   # Python dependencies
+├── docker-compose.yml                 # Docker setup for development
+├── Makefile                          # Build and deployment commands
+├── PROJECT_SUMMARY.md                # Project summary and overview
+├── TEAM_TASKS.md                     # Team task breakdown (2-week sprint)
+├── project-structure.md              # This file
 │
-├── contracts/                         # Solidity smart contracts
-│   ├── foundry.toml                   # Foundry configuration
+├── contracts/                        # Solidity smart contracts (simplified)
+│   ├── foundry.toml                  # Foundry configuration
 │   ├── src/
-│   │   ├── core/
-│   │   │   ├── BundleBuilder.sol      # Main execution contract
-│   │   │   ├── RemoteExecutor.sol     # Avalanche execution contract
-│   │   │   ├── PlanStore.sol          # Stores arbitrage plans
-│   │   │   └── EdgeOracle.sol         # Price difference oracle
-│   │   ├── interfaces/
-│   │   │   ├── IBundleBuilder.sol
-│   │   │   ├── IRemoteExecutor.sol
-│   │   │   ├── IPlanStore.sol
-│   │   │   └── IEdgeOracle.sol
-│   │   ├── libraries/
-│   │   │   ├── SafeMath.sol
-│   │   │   ├── PlanUtils.sol
-│   │   │   └── CCIPUtils.sol
-│   │   └── mocks/
-│   │       ├── MockToken.sol
-│   │       ├── MockDEX.sol
-│   │       └── MockCCIP.sol
+│   │   ├── BundleBuilder.sol         # Main execution contract
+│   │   └── IBundleBuilder.sol        # Contract interface
 │   ├── test/
-│   │   ├── unit/
-│   │   ├── integration/
-│   │   └── fork/
+│   │   └── BundleBuilder.t.sol       # Basic contract tests
 │   ├── script/
-│   │   ├── Deploy.s.sol
-│   │   └── Verify.s.sol
+│   │   └── Deploy.s.sol              # Deployment script
 │   └── lib/                          # Foundry dependencies
 │
-├── agents/                           # Amazon Bedrock AI agents
-│   ├── __init__.py
-│   ├── requirements.txt
-│   ├── config/
-│   │   ├── bedrock_config.py
-│   │   └── chains_config.py
-│   ├── watcher/
-│   │   ├── __init__.py
-│   │   ├── pool_monitor.py           # Monitors DEX pools
-│   │   ├── price_tracker.py          # Tracks price movements
-│   │   └── event_listener.py         # Listens to blockchain events
-│   ├── planner/
-│   │   ├── __init__.py
-│   │   ├── route_optimizer.py        # Finds optimal arbitrage routes
-│   │   ├── profit_calculator.py      # Calculates expected profits
-│   │   └── simulation_engine.py      # Tenderly fork simulations
-│   ├── risk_guard/
-│   │   ├── __init__.py
-│   │   ├── risk_assessor.py          # Assesses trade risks
-│   │   ├── gas_monitor.py            # Monitors gas prices
-│   │   └── kms_signer.py             # AWS KMS integration
-│   └── shared/
-│       ├── __init__.py
-│       ├── models.py                 # Data models and schemas
-│       ├── utils.py                  # Common utilities
-│       └── api_client.py             # External API clients
+├── agents/                           # AI agents (single files)
+│   ├── watcher.py                    # Price monitoring & opportunity detection
+│   ├── planner.py                    # Amazon Bedrock AI planning
+│   └── executor.py                   # Execution coordination
 │
 ├── chainlink/                        # Chainlink integrations
 │   ├── functions/
 │   │   ├── source.js                 # Functions source code
-│   │   ├── config.json               # Functions configuration
-│   │   └── deploy.js                 # Deployment script
-│   ├── automation/
-│   │   ├── upkeep_config.json        # Automation configuration
-│   │   └── register.js               # Upkeep registration
-│   └── ccip/
-│       ├── config.json               # CCIP configuration
-│       └── utils.js                  # CCIP utilities
+│   │   └── config.json               # Functions configuration
+│   └── automation/
+│       └── upkeep.js                 # Automation setup and monitoring
 │
 ├── suave/                            # SUAVE Helios integration
-│   ├── bundle_builder.py             # Bundle creation logic
-│   ├── auction_client.py             # SUAVE network client
-│   ├── config.py                     # SUAVE configuration
-│   └── utils.py                      # SUAVE utilities
+│   ├── bundle_builder.py             # Bundle creation and submission
+│   └── SUAVE_GUIDE.md               # Complete SUAVE beginner's guide
 │
-├── monitoring/                       # Monitoring and dashboard
-│   ├── dashboard/
-│   │   ├── app.py                    # Flask/FastAPI dashboard
-│   │   ├── templates/
-│   │   ├── static/
-│   │   └── requirements.txt
-│   ├── metrics/
-│   │   ├── collector.py              # Metrics collection
-│   │   ├── exporter.py               # Prometheus exporter
-│   │   └── alerts.py                 # Alert system
-│   └── cli/
-│       ├── status.py                 # CLI status commands
-│       └── profits.py                # Profit tracking CLI
+├── monitoring/                       # Monitoring (simplified)
+│   └── dashboard.py                  # Single-file FastAPI dashboard
 │
-├── scripts/                          # Deployment and utility scripts
-│   ├── deploy.py                     # Full deployment script
-│   ├── setup_env.py                  # Environment setup
-│   ├── test_connection.py            # Connection testing
-│   └── migrate.py                    # Database migrations
+├── scripts/                          # Utility scripts
+│   ├── test_full_flow.py             # End-to-end testing
+│   └── setup.py                      # Environment setup
 │
-├── tests/                            # Integration tests
-│   ├── __init__.py
-│   ├── test_e2e.py                   # End-to-end tests
-│   ├── test_agents.py                # Agent testing
-│   ├── test_chainlink.py             # Chainlink integration tests
-│   └── fixtures/
-│       ├── contracts.py
-│       └── test_data.py
+├── tests/                            # Tests
+│   └── test_agents.py                # Agent unit tests
 │
-├── docs/                             # Documentation
-│   ├── README.md                     # Documentation index
-│   ├── IMPLEMENTATION.md             # Implementation guide
-│   ├── ARCHITECTURE.md               # Architecture overview
-│   ├── API.md                        # API documentation
-│   ├── DEPLOYMENT.md                 # Deployment guide
-│   ├── TROUBLESHOOTING.md            # Common issues and solutions
+├── docs/                             # Documentation (updated for hackathon)
+│   ├── ARCHITECTURE.md               # Simplified architecture
+│   ├── IMPLEMENTATION.md             # Hackathon implementation guide
+│   ├── TEAM_TASKS.md                 # 2-week team tasks
+│   ├── practical-example.md          # Demo flow example
 │   └── diagrams/                     # Architecture diagrams
-│       ├── system_architecture.mmd
-│       ├── data_flow.mmd
-│       └── component_interaction.mmd
 │
-├── config/                           # Configuration files
-│   ├── development.json
-│   ├── testnet.json
-│   ├── mainnet.json
-│   └── chains.json
+├── config/                           # Configuration
+│   ├── chains.json                   # Chain configurations
+│   └── tokens.json                   # Token configurations
 │
-└── tools/                            # Development tools
-    ├── gas_tracker.py                # Gas price tracking
-    ├── profit_analyzer.py            # Profit analysis tools
-    └── pool_analyzer.py              # DEX pool analysis
-``` 
+└── tools/                            # Development tools (minimal)
+    └── debug.py                      # Debugging utilities
+```
+
+## 🎯 Hackathon Simplifications
+
+### What We Removed
+- ❌ Complex agent subdirectories (watcher/, planner/, risk_guard/)
+- ❌ Multiple monitoring components (metrics/, cli/, alerts/)
+- ❌ KMS integration and complex security
+- ❌ PostgreSQL and Redis dependencies
+- ❌ Multiple environment configs
+- ❌ Complex testing infrastructure
+
+### What We Kept
+- ✅ Core arbitrage functionality
+- ✅ AI integration (Amazon Bedrock)
+- ✅ Chainlink services (Functions, Automation, CCIP)
+- ✅ SUAVE MEV protection
+- ✅ Real-time dashboard
+- ✅ End-to-end testing
+- ✅ Complete documentation
+
+## 📄 Key Files Explained
+
+### Core Implementation
+| File | Purpose | Lines | Complexity |
+|------|---------|-------|------------|
+| `agents/watcher.py` | Price monitoring & SQLite storage | ~200 | Simple |
+| `agents/planner.py` | Amazon Bedrock AI integration | ~150 | Medium |
+| `agents/executor.py` | Execution coordination | ~100 | Simple |
+| `monitoring/dashboard.py` | Real-time web dashboard | ~300 | Medium |
+| `contracts/src/BundleBuilder.sol` | Smart contract execution | ~200 | Medium |
+
+### Integrations
+| File | Purpose | Technology | Status |
+|------|---------|------------|--------|
+| `chainlink/functions/source.js` | AI plan fetching | Chainlink Functions | ✅ Working |
+| `chainlink/automation/upkeep.js` | Automated execution | Chainlink Automation | ✅ Working |
+| `suave/bundle_builder.py` | MEV protection | SUAVE Helios | ✅ Working |
+| `scripts/test_full_flow.py` | E2E testing | Python asyncio | ✅ Working |
+
+### Documentation
+| File | Purpose | Audience |
+|------|---------|----------|
+| `README.md` | Quick start guide | Developers |
+| `docs/ARCHITECTURE.md` | System design | Technical review |
+| `docs/IMPLEMENTATION.md` | Step-by-step guide | Development team |
+| `docs/practical-example.md` | Demo walkthrough | Presentation |
+| `suave/SUAVE_GUIDE.md` | SUAVE integration | SUAVE beginners |
+
+## 🗄️ Database Schema (SQLite)
+
+```sql
+-- arbitrage_data.db
+CREATE TABLE price_data (
+    id INTEGER PRIMARY KEY,
+    chain TEXT NOT NULL,
+    dex TEXT NOT NULL,
+    token_pair TEXT NOT NULL,
+    price REAL NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE opportunities (
+    id INTEGER PRIMARY KEY,
+    token TEXT NOT NULL,
+    chain_a TEXT NOT NULL,
+    chain_b TEXT NOT NULL,
+    price_a REAL NOT NULL,
+    price_b REAL NOT NULL,
+    spread_bps INTEGER NOT NULL,
+    profit_estimate REAL NOT NULL,
+    status TEXT DEFAULT 'detected',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE arbitrage_plans (
+    plan_id TEXT PRIMARY KEY,
+    token TEXT NOT NULL,
+    trade_size_usd REAL NOT NULL,
+    expected_profit REAL NOT NULL,
+    status TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE executions (
+    id INTEGER PRIMARY KEY,
+    plan_id TEXT NOT NULL,
+    tx_hash TEXT,
+    expected_profit REAL NOT NULL,
+    actual_profit REAL,
+    status TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+## 🔧 Configuration Files
+
+### Environment Variables (`.env`)
+```bash
+# AWS Bedrock
+AWS_ACCESS_KEY_ID=your_access_key
+AWS_SECRET_ACCESS_KEY=your_secret_key
+AWS_REGION=us-east-1
+
+# Blockchain RPCs
+ARBITRUM_RPC_URL=https://arb1.arbitrum.io/rpc
+AVALANCHE_RPC_URL=https://api.avax.network/ext/bc/C/rpc
+
+# Chainlink
+CHAINLINK_FUNCTIONS_SUBSCRIPTION_ID=123
+LINK_TOKEN_ADDRESS=0x...
+FUNCTIONS_ROUTER_ADDRESS=0x...
+
+# SUAVE
+SUAVE_RPC_URL=https://rpc.rigil.suave.flashbots.net
+SUAVE_PRIVATE_KEY=0x...
+
+# Application
+ENVIRONMENT=hackathon
+DEBUG=true
+LOG_LEVEL=INFO
+```
+
+### Chain Configuration (`config/chains.json`)
+```json
+{
+  "arbitrum": {
+    "chainId": 42161,
+    "rpcUrl": "https://arb1.arbitrum.io/rpc",
+    "dexes": ["uniswap_v3", "camelot"],
+    "ccipChainSelector": "4949039107694359620"
+  },
+  "avalanche": {
+    "chainId": 43114,
+    "rpcUrl": "https://api.avax.network/ext/bc/C/rpc", 
+    "dexes": ["trader_joe", "pangolin"],
+    "ccipChainSelector": "6433500567565415381"
+  }
+}
+```
+
+## 🚀 Development Workflow
+
+### 1. Local Setup
+```bash
+git clone <repository>
+cd chainlink-arbitrage-bot
+make install-all     # Install all dependencies
+make setup-local     # Setup local environment
+```
+
+### 2. Development Cycle
+```bash
+# Start agents
+python agents/watcher.py &
+python agents/planner.py &
+
+# Start dashboard
+python monitoring/dashboard.py &
+
+# Run tests
+python scripts/test_full_flow.py
+```
+
+### 3. Deployment
+```bash
+# Deploy contracts
+cd contracts && forge script script/Deploy.s.sol --broadcast
+
+# Configure Chainlink services
+cd chainlink && node automation/upkeep.js register
+```
+
+## 📊 File Sizes & Complexity
+
+### Small Files (< 100 lines)
+- `agents/executor.py` - Simple coordination logic
+- `config/*.json` - Configuration files
+- `scripts/setup.py` - Environment setup
+
+### Medium Files (100-300 lines)
+- `agents/watcher.py` - Price monitoring with SQLite
+- `agents/planner.py` - Bedrock AI integration
+- `monitoring/dashboard.py` - FastAPI web server
+- `contracts/src/BundleBuilder.sol` - Smart contract
+
+### Large Files (300+ lines)
+- `scripts/test_full_flow.py` - Comprehensive E2E testing
+- `suave/SUAVE_GUIDE.md` - Complete SUAVE documentation
+
+## 🎯 Hackathon Success Metrics
+
+### Code Quality
+- **Total Lines**: ~2,000 (vs 10,000+ in production version)
+- **Files**: ~20 core files (vs 50+ in complex version)  
+- **Dependencies**: Minimal (Web3, FastAPI, Boto3, Asyncio)
+- **Setup Time**: < 15 minutes
+
+### Functionality
+- ✅ **AI Decision Making**: Amazon Bedrock integration
+- ✅ **Cross-chain Arbitrage**: Arbitrum ↔ Avalanche
+- ✅ **MEV Protection**: SUAVE bundle submission
+- ✅ **Real-time Monitoring**: Live dashboard
+- ✅ **Automated Execution**: Chainlink Automation
+- ✅ **End-to-end Testing**: Complete flow validation
+
+This simplified structure enables rapid development while maintaining all core functionalities for an impressive hackathon demonstration! 🚀 

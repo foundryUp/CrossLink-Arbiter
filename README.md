@@ -1,303 +1,227 @@
-# 🚀 Cross-Domain Arbitrage Bot - MEV Searcher
+# 🚀 Cross-Domain Arbitrage Bot - Hackathon Edition
 
-> **Autonomous MEV searcher** that captures price discrepancies between **Arbitrum** and **Avalanche** networks using **Chainlink CCIP** and **SUAVE Helios** for atomic cross-chain arbitrage.
+> **2-Week Sprint**: Autonomous MEV searcher demonstrating cross-chain arbitrage between Arbitrum and Avalanche using Chainlink CCIP, Amazon Bedrock AI agents, and SUAVE Helios for MEV protection.
 
-## 📋 Table of Contents
+## 🎯 Hackathon Objectives
 
-- [🎯 Project Overview](#-project-overview)
-- [🏗️ Architecture](#️-architecture)
-- [🛠️ Tech Stack](#️-tech-stack)
-- [⚡ Quick Start](#-quick-start)
-- [📁 Project Structure](#-project-structure)
-- [🔧 Configuration](#-configuration)
-- [🚀 Deployment](#-deployment)
-- [📊 Monitoring](#-monitoring)
-- [🧪 Testing](#-testing)
-- [📚 Documentation](#-documentation)
-- [👥 Team Tasks](#-team-tasks)
+**Primary Goal**: Demonstrate a working cross-chain arbitrage flow in 2 weeks
+- ✅ AI-powered opportunity detection (Amazon Bedrock)
+- ✅ Atomic execution with MEV protection (SUAVE Helios)  
+- ✅ Cross-chain bridging (Chainlink CCIP)
+- ✅ Automated monitoring and execution (Chainlink Automation)
 
-## 🎯 Project Overview
+## 🏗️ Simplified Architecture
 
-The Cross-Domain Arbitrage Bot is an **autonomous MEV searcher** that executes atomic arbitrage transactions across Arbitrum and Avalanche networks. The system:
-
-1. **Detects** profitable price discrepancies between DEXs on both networks
-2. **Executes** atomic swap sequences using Chainlink CCIP for cross-chain messaging
-3. **Ensures** fail-safe execution through SUAVE Helios bundling
-4. **Maximizes** profit while minimizing risk through AI-powered decision making
-
-### Key Features
-
-- ✅ **Atomic Cross-Chain Execution** - All or nothing transaction guarantees
-- ✅ **AI-Powered Decision Making** - Amazon Bedrock agents for intelligent routing
-- ✅ **Real-time Price Monitoring** - Chainlink Data Streams integration
-- ✅ **Automated Execution** - Chainlink Automation for trigger management
-- ✅ **Risk Management** - Built-in gas and slippage protection
-- ✅ **MEV Protection** - SUAVE Helios for transaction privacy
-
-## 🏗️ Architecture
-
-The system consists of 8 core components working together:
-
-```mermaid
-graph TB
-    A[AI Search Layer<br/>Bedrock Agents] --> B[Plan Ingress<br/>Chainlink Functions]
-    B --> C[Plan Store<br/>Smart Contract]
-    D[Live Price Oracle<br/>Data Streams] --> E[Execution Scheduler<br/>Automation]
-    C --> E
-    E --> F[Atomic Trade Module<br/>Bundle Builder]
-    F --> G[Cross-Chain Bridge<br/>CCIP]
-    G --> H[Remote Executor<br/>Avalanche]
-    F --> I[Block Auction<br/>SUAVE Helios]
-    H --> J[Treasury & Accounting]
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   AI Watcher    │───▶│  Opportunity     │───▶│   Execution     │
+│  (Bedrock)      │    │  Validator       │    │   Engine        │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+                                ▲                        │
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│ Price Feeds     │───▶│  Chainlink       │◀───│   CCIP Bridge   │
+│ (Data Streams)  │    │  Functions       │    │                 │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+                                ▲                        │
+                       ┌──────────────────┐    ┌─────────────────┐
+                       │  Automation      │◀───│  SUAVE Helios   │
+                       │  (Cron Jobs)     │    │  (MEV Shield)   │
+                       └──────────────────┘    └─────────────────┘
 ```
 
-## 🛠️ Tech Stack
-
-| Component | Technology | Purpose |
-|-----------|------------|---------|
-| **Smart Contracts** | Solidity 0.8.x + Foundry | On-chain execution logic |
-| **AI Agents** | Python 3.x + Amazon Bedrock | Intelligent arbitrage detection |
-| **Cross-Chain** | Chainlink CCIP | Token and message bridging |
-| **Automation** | Chainlink Functions + Automation | Trigger management |
-| **Oracles** | Chainlink Data Streams | Real-time price feeds |
-| **MEV Protection** | SUAVE Helios | Transaction bundling |
-| **Monitoring** | Python + FastAPI | Dashboard and alerts |
-| **Infrastructure** | Docker + AWS | Deployment and hosting |
-
-## ⚡ Quick Start
+## 🚀 Quick Start (15 minutes)
 
 ### Prerequisites
-
-- Node.js 18+ and npm
-- Python 3.9+
-- Foundry (for Solidity development)
-- Docker and Docker Compose
-- AWS CLI (for Bedrock access)
-
-### 1. Clone and Setup
-
 ```bash
-git clone https://github.com/your-org/chainlink-arbitrage-bot.git
+node --version    # v18+
+python --version  # 3.9+
+forge --version   # foundry
+docker --version  # for local services
+```
+
+### 1. Clone & Setup
+```bash
+git clone <your-repo>
 cd chainlink-arbitrage-bot
+make install-all
+```
 
-# Install dependencies
-npm install
-pip install -r requirements.txt
-
-# Setup environment
+### 2. Environment Setup
+```bash
 cp .env.example .env
-# Edit .env with your configuration
+# Edit .env with your keys (no KMS needed!)
+make setup-local
 ```
 
-### 2. Install Foundry Dependencies
-
+### 3. Start Local Stack
 ```bash
-cd contracts
-forge install
-cd ..
+make dev-start    # Starts all services
+make test-flow    # Tests the full arbitrage flow
 ```
 
-### 3. Start Development Environment
+## 🛠️ Tech Stack (Simplified)
 
-```bash
-docker-compose up -d
-```
+### Core Technologies
+- **AI Layer**: Amazon Bedrock (Claude 3.5 Sonnet) - Simple prompt-based agents
+- **Execution**: Chainlink Functions + Automation (no complex scheduling)
+- **Pricing**: Chainlink Data Streams (basic price feeds)
+- **Cross-Chain**: Chainlink CCIP (standard bridge operations)
+- **MEV Protection**: SUAVE Helios (basic bundle submission)
 
-### 4. Deploy Smart Contracts (Testnet)
-
-```bash
-make deploy-testnet
-```
-
-### 5. Start the Bot
-
-```bash
-# Start AI agents
-python -m agents.main
-
-# Start monitoring dashboard
-python -m monitoring.dashboard.app
-```
+### Development Stack
+- **Contracts**: Foundry (Solidity 0.8.19)
+- **Backend**: Python 3.9+ (web3py, boto3)
+- **Frontend**: Simple React dashboard (optional)
+- **Database**: SQLite (no PostgreSQL complexity)
+- **Monitoring**: Basic logging (no Grafana/Prometheus)
 
 ## 📁 Project Structure
 
 ```
-chainlink-arbitrage-bot/
-├── contracts/          # Solidity smart contracts
-├── agents/            # Amazon Bedrock AI agents
-├── chainlink/         # Chainlink integrations
-├── suave/            # SUAVE Helios integration
-├── monitoring/       # Dashboard and metrics
-├── scripts/          # Deployment scripts
-├── tests/            # Integration tests
-├── docs/             # Documentation
-├── config/           # Configuration files
-└── tools/            # Development tools
+├── contracts/               # Solidity contracts
+│   ├── src/
+│   │   ├── BundleBuilder.sol       # Main execution contract
+│   │   └── interfaces/             # Contract interfaces
+│   └── test/                       # Contract tests
+├── agents/                  # AI agents (simplified)
+│   ├── watcher.py                  # Price monitoring
+│   ├── planner.py                  # Strategy planning
+│   └── executor.py                 # Trade execution
+├── chainlink/              # Chainlink integrations
+│   ├── functions/                  # Chainlink Functions
+│   ├── automation/                 # Automation configs
+│   └── ccip/                      # Cross-chain setup
+├── config/                 # Configuration files
+├── scripts/                # Deployment & utility scripts
+├── tests/                  # Integration tests
+└── monitoring/             # Basic monitoring setup
+```
+
+## 🎮 Usage Examples
+
+### Manual Arbitrage Detection
+```bash
+# Monitor price differences
+python agents/watcher.py --chains arbitrum,avalanche
+
+# Execute detected opportunity
+python agents/executor.py --opportunity-id 12345
+```
+
+### View Dashboard
+```bash
+make dashboard        # Opens local monitoring dashboard
 ```
 
 ## 🔧 Configuration
 
-### Environment Variables
-
-Copy `.env.example` to `.env` and configure:
-
+### Core Settings (.env)
 ```bash
-# Blockchain Networks
+# Blockchain RPCs (use public endpoints for hackathon)
 ARBITRUM_RPC_URL=https://arb1.arbitrum.io/rpc
 AVALANCHE_RPC_URL=https://api.avax.network/ext/bc/C/rpc
-PRIVATE_KEY=your_private_key_here
 
-# Chainlink Configuration
-CHAINLINK_FUNCTIONS_SUBSCRIPTION_ID=123
-CHAINLINK_AUTOMATION_UPKEEP_ID=456
-
-# AWS Bedrock
+# AWS Bedrock (simplified auth)
+AWS_ACCESS_KEY_ID=your_key
+AWS_SECRET_ACCESS_KEY=your_secret
 AWS_REGION=us-east-1
-AWS_ACCESS_KEY_ID=your_access_key
-AWS_SECRET_ACCESS_KEY=your_secret_key
 
-# SUAVE Configuration
-SUAVE_KETTLE_RPC=https://rpc.rigil.suave.flashbots.net
-SUAVE_PRIVATE_KEY=your_suave_private_key
+# Chainlink Services
+CHAINLINK_API_KEY=your_api_key
+CHAINLINK_AUTOMATION_REGISTRY=0x...
 
-# Monitoring
-DASHBOARD_PORT=8080
-METRICS_PORT=9090
+# SUAVE (testnet)
+SUAVE_RPC_URL=https://rpc.rigil.suave.flashbots.net
 ```
 
-### Chain Configuration
-
-Edit `config/chains.json` to configure supported DEXs and tokens:
-
-```json
-{
-  "arbitrum": {
-    "chainId": 42161,
-    "dexes": ["sushiswap", "uniswap_v3"],
-    "tokens": ["WETH", "USDC", "USDT"]
-  },
-  "avalanche": {
-    "chainId": 43114,
-    "dexes": ["trader_joe", "pangolin"],
-    "tokens": ["WAVAX", "USDC", "USDT"]
-  }
-}
-```
-
-## 🚀 Deployment
-
-### Testnet Deployment
-
-```bash
-# Deploy all contracts to testnets
-make deploy-testnet
-
-# Setup Chainlink services
-make setup-chainlink-testnet
-
-# Deploy Bedrock agents
-make deploy-agents-testnet
-```
-
-### Mainnet Deployment
-
-```bash
-# Deploy contracts to mainnet (requires verification)
-make deploy-mainnet
-
-# Setup production monitoring
-make setup-monitoring-prod
-
-# Deploy to AWS
-make deploy-aws-prod
-```
-
-## 📊 Monitoring
-
-### Dashboard
-
-Access the monitoring dashboard at `http://localhost:8080` to view:
-
-- 📈 Live price spreads
-- 💰 Realized profits
-- ⚡ Gas prices
-- 🔄 Active arbitrage plans
-- 📊 Success/failure rates
-
-### CLI Tools
-
-```bash
-# Check system status
-python -m monitoring.cli.status
-
-# View profit history
-python -m monitoring.cli.profits --days 7
-
-# Monitor gas prices
-python tools/gas_tracker.py
-```
+### Supported DEXs & Tokens
+- **Arbitrum**: Uniswap V3, Camelot, Balancer
+- **Avalanche**: Trader Joe, Pangolin, Curve
+- **Tokens**: WETH, USDC, USDT, WBTC (top 4 for simplicity)
 
 ## 🧪 Testing
 
-### Smart Contract Tests
-
+### Run Test Suite
 ```bash
-cd contracts
-forge test
+make test-all           # Full test suite
+make test-contracts     # Contract tests only
+make test-agents        # AI agent tests
+make test-integration   # End-to-end flow
 ```
 
-### Integration Tests
-
+### Simulate Arbitrage
 ```bash
-# Run full integration test suite
-pytest tests/
-
-# Run specific test categories
-pytest tests/test_agents.py
-pytest tests/test_chainlink.py
+make simulate-arb       # Simulates profitable arbitrage
 ```
 
-### End-to-End Tests
+## 📊 2-Week Milestones
 
-```bash
-# Run E2E tests on testnet
-python tests/test_e2e.py --network testnet
-```
+### Week 1: Core Infrastructure
+- **Days 1-3**: Smart contracts + basic AI agents
+- **Days 4-5**: Chainlink Functions + Data Streams
+- **Days 6-7**: CCIP integration + local testing
 
-## 📚 Documentation
+### Week 2: Integration & Demo
+- **Days 8-10**: SUAVE integration + full flow testing
+- **Days 11-12**: Monitoring dashboard + bug fixes
+- **Days 13-14**: Demo preparation + documentation
 
-- [📖 Implementation Guide](docs/IMPLEMENTATION.md) - Detailed implementation instructions
-- [🏛️ Architecture Overview](docs/ARCHITECTURE.md) - System architecture deep dive
-- [🔌 API Documentation](docs/API.md) - API reference
-- [🚀 Deployment Guide](docs/DEPLOYMENT.md) - Production deployment
-- [🔧 Troubleshooting](docs/TROUBLESHOOTING.md) - Common issues and solutions
+## 🚨 Hackathon Limitations
 
-## 👥 Team Tasks
+### What's Simplified
+- **Security**: Basic key management (no KMS/HSM)
+- **Monitoring**: Console logging instead of full observability
+- **Database**: SQLite instead of PostgreSQL
+- **Deployment**: Local only (no cloud infrastructure)
+- **Testing**: Core flows only (no edge case handling)
 
-This project is designed for a **4-developer team**. See [Team Task Division](docs/TEAM_TASKS.md) for detailed task assignments:
+### What's Maintained
+- **Core Flow**: Full arbitrage detection → execution → bridging
+- **AI Integration**: Real Bedrock agents for opportunity detection
+- **Chainlink Stack**: Functions, Automation, CCIP, Data Streams
+- **MEV Protection**: SUAVE Helios bundle submission
 
-- **👨‍💻 Developer 1**: Smart Contracts & Foundry
-- **🤖 Developer 2**: AI Agents & Bedrock Integration  
-- **🔗 Developer 3**: Chainlink Services & CCIP
-- **📊 Developer 4**: SUAVE Integration & Monitoring
+## 🎯 Success Metrics
 
-## 🤝 Contributing
+### Technical Demos
+1. **AI Detection**: Show Bedrock agent finding price differences
+2. **Atomic Execution**: Demonstrate bundle execution via SUAVE
+3. **Cross-Chain Bridge**: Show CCIP transfer completion
+4. **Profit Calculation**: Display net profit after gas costs
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### Performance Targets
+- **Detection Latency**: < 10 seconds
+- **Execution Time**: < 3 minutes end-to-end
+- **Minimum Profit**: > 0.1% after gas costs
+- **Success Rate**: > 80% for detected opportunities
 
-## 📄 License
+## 🤝 Team Roles (2 Developers)
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+### Developer 1: Smart Contracts + Chainlink
+- BundleBuilder contract implementation
+- Chainlink Functions + Automation setup
+- CCIP cross-chain logic
+- Contract testing
 
-## ⚠️ Disclaimer
+### Developer 2: AI Agents + SUAVE
+- Bedrock agent development
+- SUAVE Helios integration
+- Price monitoring system
+- Integration testing
 
-This software is for educational and research purposes. Trading cryptocurrencies involves substantial risk. Always test thoroughly on testnets before mainnet deployment.
+## 📞 Support
+
+### Resources
+- [Chainlink Documentation](https://docs.chain.link/)
+- [Amazon Bedrock Docs](https://docs.aws.amazon.com/bedrock/)
+- [SUAVE Documentation](https://suave.flashbots.net/)
+
+### Community
+- Chainlink Discord: #hackathon-support
+- SUAVE Telegram: @suave-dev
+- Project Issues: GitHub Issues tab
 
 ---
 
-**🔥 Ready to capture MEV opportunities? Let's build the future of cross-chain arbitrage!**
+**Built for Chainlink Hackathon 2024** | **Estimated Timeline: 14 days** | **Team Size: 2 developers**
 
