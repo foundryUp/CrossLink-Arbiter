@@ -1,0 +1,117 @@
+{
+  "arbitrum": {
+    "chainId": 42161,
+    "name": "Arbitrum One",
+    "rpcUrl": "https://arb1.arbitrum.io/rpc",
+    "blockTime": 0.25,
+    "gasLimit": 30000000,
+    "dexes": {
+      "sushiswap": {
+        "name": "SushiSwap",
+        "router": "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
+        "factory": "0xc35DADB65012eC5796536bD9864eD8773aBc74C4",
+        "fee": 30
+      },
+      "uniswap_v3": {
+        "name": "Uniswap V3",
+        "router": "0xE592427A0AEce92De3Edee1F18E0157C05861564",
+        "factory": "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+        "quoter": "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6",
+        "fees": [100, 500, 3000, 10000]
+      }
+    },
+    "tokens": {
+      "WETH": {
+        "address": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+        "decimals": 18,
+        "symbol": "WETH"
+      },
+      "USDC": {
+        "address": "0xA0b86a33E6417c4d75A664794d4A4D32Bd7ed31F",
+        "decimals": 6,
+        "symbol": "USDC.e"
+      },
+      "USDT": {
+        "address": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+        "decimals": 6,
+        "symbol": "USDT"
+      },
+      "ARB": {
+        "address": "0x912CE59144191C1204E64559FE8253a0e49E6548",
+        "decimals": 18,
+        "symbol": "ARB"
+      }
+    },
+    "ccip": {
+      "router": "0x141fa059441E0ca23ce184B6A78bafD2A517DdE8",
+      "chainSelector": "4949039107694359620"
+    }
+  },
+  "avalanche": {
+    "chainId": 43114,
+    "name": "Avalanche C-Chain",
+    "rpcUrl": "https://api.avax.network/ext/bc/C/rpc",
+    "blockTime": 2,
+    "gasLimit": 8000000,
+    "dexes": {
+      "trader_joe": {
+        "name": "Trader Joe",
+        "router": "0x60aE616a2155Ee3d9A68541Ba4544862310933d4",
+        "factory": "0x9Ad6C38BE94206cA50bb0d90783181662f0Cfa10",
+        "fee": 30
+      },
+      "pangolin": {
+        "name": "Pangolin",
+        "router": "0xE54Ca86531e17Ef3616d22Ca28b0D458b6C89106",
+        "factory": "0xefa94DE7a4656D787667C749f7E1223D71E9FD88",
+        "fee": 30
+      }
+    },
+    "tokens": {
+      "WAVAX": {
+        "address": "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
+        "decimals": 18,
+        "symbol": "WAVAX"
+      },
+      "USDC": {
+        "address": "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
+        "decimals": 6,
+        "symbol": "USDC"
+      },
+      "USDT": {
+        "address": "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7",
+        "decimals": 6,
+        "symbol": "USDT.e"
+      },
+      "WETH": {
+        "address": "0x49D5c2BdFfac6CE2BFdB6640F4F80f226bc10bAB",
+        "decimals": 18,
+        "symbol": "WETH.e"
+      }
+    },
+    "ccip": {
+      "router": "0xF4c7E640EdA248ef95972845a62bdC74237805dB",
+      "chainSelector": "6433500567565415381"
+    }
+  },
+  "testnets": {
+    "arbitrum_sepolia": {
+      "chainId": 421614,
+      "name": "Arbitrum Sepolia",
+      "rpcUrl": "https://sepolia-rollup.arbitrum.io/rpc",
+      "ccip": {
+        "router": "0x2a9C5afB0d0e4BAb2BCdaE109EC4b0c4Be15a165",
+        "chainSelector": "3478487238524512106"
+      }
+    },
+    "avalanche_fuji": {
+      "chainId": 43113,
+      "name": "Avalanche Fuji",
+      "rpcUrl": "https://api.avax-test.network/ext/bc/C/rpc",
+      "ccip": {
+        "router": "0xF694E193200268f9a4868e4Aa017A0118C9a8177",
+        "chainSelector": "14767482510784806043"
+      }
+    }
+  }
+} 
