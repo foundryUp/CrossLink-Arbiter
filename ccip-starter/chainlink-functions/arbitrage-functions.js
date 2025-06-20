@@ -18,6 +18,24 @@ const ARBITRUM_SEPOLIA_RPC = "https://arb-sepolia.g.alchemy.com/v2/xiJw6cj_7U8PX
 const ETHEREUM_WETH_CCIPBNM_PAIR = args[0]; // First argument: Ethereum pair address  
 const ARBITRUM_WETH_CCIPBNM_PAIR = args[1]; // Second argument: Arbitrum pair address
 
+// Validate arguments
+if (!ETHEREUM_WETH_CCIPBNM_PAIR || !ARBITRUM_WETH_CCIPBNM_PAIR) {
+    throw new Error("Missing required arguments: pair addresses");
+}
+
+// Validate Ethereum addresses (basic check)
+function isValidEthereumAddress(address) {
+    return /^0x[a-fA-F0-9]{40}$/.test(address);
+}
+
+if (!isValidEthereumAddress(ETHEREUM_WETH_CCIPBNM_PAIR)) {
+    throw new Error(`Invalid Ethereum pair address: ${ETHEREUM_WETH_CCIPBNM_PAIR}`);
+}
+
+if (!isValidEthereumAddress(ARBITRUM_WETH_CCIPBNM_PAIR)) {
+    throw new Error(`Invalid Arbitrum pair address: ${ARBITRUM_WETH_CCIPBNM_PAIR}`);
+}
+
 // Anthropic API configuration
 const ANTHROPIC_API_KEY = "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";
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
@@ -104,15 +122,23 @@ function decodeReserves(data) {
  * Calculates price based on reserves (CCIP-BnM per WETH)
  */
 function calculatePrice(reserve0, reserve1, token0IsWETH) {
+    // Validate reserves are not zero
+    if (reserve0 === 0n || reserve1 === 0n) {
+        throw new Error("Pool has no liquidity - one or both reserves are zero");
+    }
+    
+    // Convert BigInt to Number for decimal division
+    const reserve0Num = Number(reserve0);
+    const reserve1Num = Number(reserve1);
+    
     if (token0IsWETH) {
         // WETH is token0, CCIP-BnM is token1
         // Price = CCIP-BnM/WETH = reserve1/reserve0
-        // Both tokens have 18 decimals, so no adjustment needed
-        return reserve1 / reserve0;
+        return reserve1Num / reserve0Num;
     } else {
         // CCIP-BnM is token0, WETH is token1
         // Price = CCIP-BnM/WETH = reserve0/reserve1
-        return reserve0 / reserve1;
+        return reserve0Num / reserve1Num;
     }
 }
 
@@ -185,8 +211,13 @@ async function main() {
 
         // 3. Calculate edge in basis points
         const edgeBps = arbPrice > ethPrice 
-            ? Number(((arbPrice - ethPrice) * BigInt(10000)) / ethPrice)
-            : Number(((ethPrice - arbPrice) * BigInt(10000)) / arbPrice);
+            ? ((arbPrice - ethPrice) * 10000) / ethPrice
+            : ((ethPrice - arbPrice) * 10000) / arbPrice;
+        
+        // Validate edge calculation didn't result in division by zero
+        if (!isFinite(edgeBps)) {
+            throw new Error("Invalid price data - unable to calculate arbitrage edge");
+        }
         
         console.log("Price difference (basis points):", edgeBps);
         console.log("======================");

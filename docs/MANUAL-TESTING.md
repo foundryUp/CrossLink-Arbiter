@@ -2,7 +2,7 @@
 
 ## 🎯 Complete Manual Testing Commands
 
-This guide provides all commands needed to manually test the cross-chain arbitrage flow with the **FIXED** deployment addresses.
+This guide provides all commands needed to manually test the https://meet.google.com/vxz-qkow-quxcross-chain arbitrage flow with the **FIXED** deployment addresses.
 
 ## ✅ **ISSUE RESOLVED**
 - **❌ OLD**: BundleExecutor sent CCIP messages to dummy address `0x1234...7890`
