@@ -15,10 +15,6 @@ contract DeployEthereumContracts is Script {
     address constant ETHEREUM_CCIP_BNM = 0xFd57b4ddBf88a4e07fF4e34C487b99af2Fe82a05;
     uint64 constant ARBITRUM_CHAIN_SELECTOR = 3478487238524512106;
     
-    // Real deployed addresses on Arbitrum Sepolia
-    address constant ARBITRUM_REMOTE_EXECUTOR = 0xE6C31609f971A928BB6C98Ca81A01E2930496137;
-    address constant ARBITRUM_WETH_CCIPBNM_PAIR = 0x7DCA1D3AcAcdA7cDdCAD345FB1CDC6109787914F;
-    
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address functionsConsumer = vm.envAddress("FUNCTIONS_CONSUMER_ADDRESS");
@@ -46,18 +42,17 @@ contract DeployEthereumContracts is Script {
         PlanStore existingPlanStore = ArbitrageFunctionsConsumer(functionsConsumer).planStore();
         console.log("Using existing PlanStore at:", address(existingPlanStore));
         
-        // Deploy BundleExecutor with CORRECT RemoteExecutor address and existing PlanStore
+        // Deploy BundleExecutor WITHOUT RemoteExecutor address (will be set later via setter)
         BundleExecutor bundleExecutor = new BundleExecutor(
             address(existingPlanStore),
             ETHEREUM_ROUTER,
             ETHEREUM_LINK,
             ARBITRUM_CHAIN_SELECTOR,
-            ARBITRUM_REMOTE_EXECUTOR, // ✅ FIXED: Real RemoteExecutor address
             address(weth),
             ETHEREUM_CCIP_BNM,
             address(router),
             pair,
-            ARBITRUM_WETH_CCIPBNM_PAIR // ✅ FIXED: Real Arbitrum pair address
+            address(0) // Placeholder for arbitrumPair - will be updated manually if needed
         );
         console.log("BundleExecutor deployed at:", address(bundleExecutor));
         
@@ -75,7 +70,7 @@ contract DeployEthereumContracts is Script {
         console.log("PlanStore:", address(existingPlanStore));
         console.log("BundleExecutor:", address(bundleExecutor));
         console.log("CCIP-BnM Token:", ETHEREUM_CCIP_BNM);
-        console.log("Remote Executor (Arbitrum):", ARBITRUM_REMOTE_EXECUTOR);
-        console.log("Arbitrum Pair:", ARBITRUM_WETH_CCIPBNM_PAIR);
+        console.log("\nNOTE: Remember to call bundleExecutor.setRemoteExecutor() after deploying RemoteExecutor on Arbitrum");
     }
 } 
+ 

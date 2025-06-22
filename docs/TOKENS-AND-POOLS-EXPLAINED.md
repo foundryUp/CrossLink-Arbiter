@@ -1,249 +1,156 @@
-# 🪙 Tokens and Pools Architecture Explained
+# Tokens and Pools Architecture
 
-## 🤔 Understanding Our Token Strategy
+## Token Strategy
 
-This document clarifies the **token setup**, **pool mechanics**, and **why we use this hybrid approach** on testnets.
+| Token | Type | Cross-Chain | Purpose |
+|-------|------|-------------|---------|
+| **CCIP-BnM** | Real Chainlink testnet token | ✅ Yes | Cross-chain transfers |
+| **WETH** | Mock deployed contract | ❌ No | Arbitrage trading |
 
----
+## Why This Hybrid Approach?
 
-## 🧩 Token Architecture Overview
+**Real CCIP-BnM**:
+- Native Chainlink testnet token
+- Built-in CCIP support
+- Free testnet faucet
+- Real cross-chain transfers
 
-### 📊 **What Tokens Are We Actually Using?**
+**Mock WETH**:
+- Real WETH doesn't exist on testnets
+- Easy to mint for testing
+- Controlled supply for predictable results
 
-| Token Type | Purpose | Real or Mock | Cross-Chain? | Testnet Availability |
-|------------|---------|--------------|--------------|---------------------|
-| **CCIP-BnM** | Cross-chain transfers | ✅ **REAL** | ✅ Yes | Native testnet token |
-| **WETH** | Arbitrage trading | ❌ **MOCK** | ❌ No | Custom deployed |
+## Current Pool Setup
 
-### 🔄 **Why This Hybrid Approach?**
+### Ethereum Sepolia
+- **Pair**: `0xD43E97984d9faD6d41cb901b81b3403A1e7005Fb`
+- **WETH**: `0xe95dd35Ef9dCafD0e570D378Fa04527c22A87911` (mock)
+- **CCIP-BnM**: `0xFd57b4ddBf88a4e07fF4e34C487b99af2Fe82a05` (real)
+- **Reserves**: 1.0 WETH ⟷ 40 CCIP-BnM
+- **Price**: 40 CCIP-BnM per WETH
 
-```
-Real CCIP-BnM Token:
-├── ✅ Native Chainlink testnet token
-├── ✅ Supported by CCIP on all testnets  
-├── ✅ Can be transferred cross-chain seamlessly
-└── ✅ Has built-in faucet (drip function)
+### Arbitrum Sepolia  
+- **Pair**: `0x7DCA1D3AcAcdA7cDdCAD345FB1CDC6109787914F`
+- **WETH**: `0x9BAd0F20eB62a2238c9849A7cE50FCafdE0E1481` (mock)
+- **CCIP-BnM**: `0xA8C0c11bf64AF62CDCA6f93D3769B88BdD7cb93D` (real)
+- **Reserves**: 0.8 WETH ⟷ 40 CCIP-BnM  
+- **Price**: 50 CCIP-BnM per WETH
 
-Mock WETH Token:
-├── ❌ Real WETH doesn't exist on testnets
-├── ✅ We need a "valuable" token to arbitrage
-├── ✅ Easy to mint for testing
-└── ✅ Simulates real-world WETH behavior
-```
+**Arbitrage Opportunity**: 25% price difference
 
----
-
-## 🏊‍♂️ Pool Mechanics Explained
-
-### 📋 **Current Pool Setup**
-
-#### 🔗 **Ethereum Sepolia Pool**
-```
-Pair: WETH/CCIP-BnM
-├── Mock WETH: 0xe95dd35Ef9dCafD0e570D378Fa04527c22A87911
-├── Real CCIP-BnM: 0xFd57b4ddBf88a4e07fF4e34C487b99af2Fe82a05
-├── Reserves: 1.0 WETH ⟷ 40 CCIP-BnM
-└── Price: 1 WETH = 40 CCIP-BnM
-```
-
-#### 🔗 **Arbitrum Sepolia Pool** 
-```
-Pair: WETH/CCIP-BnM  
-├── Mock WETH: 0x9BAd0F20eB62a2238c9849A7cE50FCafdE0E1481
-├── Real CCIP-BnM: 0xA8C0c11bf64AF62CDCA6f93D3769B88BdD7cb93D
-├── Reserves: 0.8 WETH ⟷ 40 CCIP-BnM
-└── Price: 1 WETH = 50 CCIP-BnM
-```
-
-### 🤝 **How Pools Work Together**
-
-```mermaid
-graph TD
-    A[Ethereum Pool] -->|1 WETH = 40 CCIP-BnM| B[Lower Price]
-    C[Arbitrum Pool] -->|1 WETH = 50 CCIP-BnM| D[Higher Price]
-    B --> E[25% Arbitrage Opportunity]
-    D --> E
-    E --> F[Cross-Chain Profit via CCIP]
-```
-
----
-
-## 🔄 Complete Arbitrage Flow
-
-### 📈 **Step-by-Step Token Movement**
+## Arbitrage Flow
 
 ```
-1. 🟦 ETHEREUM SEPOLIA
-   ├── BundleExecutor has: 10 WETH (mock)
-   ├── Swap: 5 WETH → 200 CCIP-BnM (real)
-   └── Send: 200 CCIP-BnM via CCIP to Arbitrum
-
-2. 🌉 CHAINLINK CCIP
-   ├── Transfer: 200 CCIP-BnM (real token)
-   └── Message: Swap instructions + deadline
-
-3. 🟣 ARBITRUM SEPOLIA  
-   ├── Receive: 200 CCIP-BnM (real)
-   ├── Swap: 200 CCIP-BnM → 4 WETH (mock)
-   └── Profit: 4 - 5 = -1 WETH (but illustrative)
-
-4. 💰 PROFIT REALIZATION
-   └── Send: Profit WETH to Treasury
+1. Ethereum: Swap WETH → CCIP-BnM (lower price)
+2. CCIP: Transfer CCIP-BnM to Arbitrum (real cross-chain)
+3. Arbitrum: Swap CCIP-BnM → WETH (higher price)
+4. Profit: More WETH received than spent
 ```
 
-### 🧮 **Actual Math from Our Deployment**
+## Token Verification
 
-```
-Ethereum (Lower Price):
-5 WETH × 40 CCIP-BnM/WETH = 200 CCIP-BnM
-
-Arbitrum (Higher Price):  
-200 CCIP-BnM ÷ 50 CCIP-BnM/WETH = 4 WETH
-
-Theoretical Profit:
-4 WETH received - 5 WETH spent = -1 WETH
-```
-
-**⚠️ Note:** Our current setup shows the mechanics but would lose money. In real arbitrage, you'd need more favorable prices or different amounts.
-
----
-
-## 🔧 **Why This Setup Works for Testing**
-
-### ✅ **Benefits of Mock WETH + Real CCIP-BnM**
-
-1. **Cross-Chain Testing**: Real CCIP-BnM ensures cross-chain transfers work
-2. **Cost Effective**: Don't need expensive mainnet tokens for testing  
-3. **Controlled Environment**: We control WETH supply for consistent testing
-4. **Real CCIP Integration**: CCIP functionality is 100% real and tested
-5. **Faucet Availability**: CCIP-BnM has unlimited testnet faucet access
-
-### 🎯 **What We're Actually Testing**
-
-```
-✅ Real Components:
-├── CCIP cross-chain token transfers
-├── Chainlink Functions RPC calls
-├── Anthropic LLM decision making
-├── Smart contract execution logic
-└── Gas estimation and pricing
-
-🧪 Simulated Components:
-├── WETH token (mock but realistic)
-├── Uniswap pools (mock but functional)
-└── Arbitrage opportunities (controlled)
-```
-
----
-
-## 🌐 **Testnet vs Mainnet Differences**
-
-### 🧪 **Current Testnet Setup**
-
-```
-Tokens Used:
-├── WETH: Custom mock contract (unlimited supply)
-├── CCIP-BnM: Real Chainlink testnet token
-├── LINK: Real testnet LINK for fees
-└── ETH: Real testnet ETH for gas
-
-Cross-Chain:
-├── CCIP: Real testnet CCIP infrastructure  
-├── Routers: Real Chainlink CCIP routers
-└── Pools: Real CCIP token pools for BnM
-```
-
-### 🏭 **Production Mainnet Would Use**
-
-```
-Tokens:
-├── WETH: Real wrapped Ethereum (0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2)
-├── USDC: Real USD Coin for cross-chain transfers
-├── LINK: Real LINK for Chainlink services
-└── ETH: Real Ethereum for gas
-
-Cross-Chain:
-├── CCIP: Production CCIP infrastructure
-├── Pools: Real Uniswap V3 liquidity pools
-└── DEXs: Real Uniswap, Sushiswap, etc.
-```
-
----
-
-## 📚 **Token Address Reference**
-
-### 🔗 **Ethereum Sepolia Tokens**
-
-| Token | Type | Address | Purpose |
-|-------|------|---------|---------|
-| Mock WETH | Custom | `0xe95dd35Ef9dCafD0e570D378Fa04527c22A87911` | Arbitrage asset |
-| CCIP-BnM | Real | `0xFd57b4ddBf88a4e07fF4e34C487b99af2Fe82a05` | Cross-chain transfer |
-| LINK | Real | `0x779877A7B0D9E8603169DdbD7836e478b4624789` | CCIP fees |
-
-### 🔗 **Arbitrum Sepolia Tokens**
-
-| Token | Type | Address | Purpose |
-|-------|------|---------|---------|
-| Mock WETH | Custom | `0x9BAd0F20eB62a2238c9849A7cE50FCafdE0E1481` | Arbitrage asset |
-| CCIP-BnM | Real | `0xA8C0c11bf64AF62CDCA6f93D3769B88BdD7cb93D` | Cross-chain transfer |
-| LINK | Real | N/A | Not used on destination |
-
----
-
-## 🔍 **How to Verify Token Types**
-
-### 🧪 **Check if CCIP-BnM is Real**
-
+### Check CCIP-BnM is Real
 ```bash
-# Both tokens have the same interface - drip function proves it's real
+# Has drip function (faucet)
 cast call 0xFd57b4ddBf88a4e07fF4e34C487b99af2Fe82a05 "drip(address)" YOUR_ADDRESS --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+```
+
+### Check WETH is Mock
+```bash
+# Has mint function (real WETH doesn't)
+cast send 0xe95dd35Ef9dCafD0e570D378Fa04527c22A87911 "mint(address,uint256)" YOUR_ADDRESS 1000000000000000000 --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+```
+
+## Migration to Mainnet
+
+To deploy on mainnet:
+- Replace Mock WETH → Real WETH (`0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2`)
+- Replace CCIP-BnM → Real USDC (CCIP-supported)
+# Token and Pool Addresses
+
+## Token Addresses
+
+### Ethereum Sepolia (Chain ID: 11155111)
+
+**Mock WETH (Wrapped Ethereum)**
+- **Address**: `0xe95595f0BE77d6CF079795Ed63942933E9a6bf7b`
+- **Type**: Mock ERC20 - can be minted freely
+- **Decimals**: 18
+- **Purpose**: Local arbitrage execution token
+
+**CCIP-BnM (Cross-Chain Interoperability Protocol - Burn & Mint)**
+- **Address**: `0xFd57b4ddBf88a4e07fF4e34C487b99af2Fe82a05`
+- **Type**: Real Chainlink CCIP token
+- **Decimals**: 18
+- **Purpose**: Cross-chain token transfers
+
+### Arbitrum Sepolia (Chain ID: 421614)
+
+**Mock WETH (Wrapped Ethereum)**
+- **Address**: `0x21ADF7b3F3AeA141E0b8544bF9de7e1e0CA21578`
+- **Type**: Mock ERC20 - can be minted freely
+- **Decimals**: 18
+- **Purpose**: Arbitrage completion token
+
+**CCIP-BnM (Cross-Chain Interoperability Protocol - Burn & Mint)**
+- **Address**: `0xA8C0c11bf64AF62CDCA6f93D3769B88BdD7cb93D`
+- **Type**: Real Chainlink CCIP token
+- **Decimals**: 18
+- **Purpose**: Cross-chain token transfers
+
+## Pool Addresses (Uniswap V2 Style)
+
+### Ethereum Sepolia
+- **Pair**: `0xd7471664f91C43c5c3ed2B06734b4a392D94Fe16`
+- **WETH**: `0xe95595f0BE77d6CF079795Ed63942933E9a6bf7b` (mock)
+- **CCIP-BnM**: `0xFd57b4ddBf88a4e07fF4e34C487b99af2Fe82a05` (real)
+- **Router**: `0x91a79cbF7e363FB38CfF04AdF031736C5914cd68`
+
+### Arbitrum Sepolia  
+- **Pair**: `0xAc6D3a904c37c4B75F1823d1B0238d6d48D8bfB3`
+- **WETH**: `0x21ADF7b3F3AeA141E0b8544bF9de7e1e0CA21578` (mock)
+- **CCIP-BnM**: `0xA8C0c11bf64AF62CDCA6f93D3769B88BdD7cb93D` (real)
+- **Router**: `0x35B9ff20240eb9B514150AE21D38F1596bf33355`
+
+## Getting Test Tokens
+
+### CCIP-BnM (Cross-chain tokens)
+```bash
+# Ethereum Sepolia - Get CCIP-BnM tokens
+cast call 0xFd57b4ddBf88a4e07fF4e34C487b99af2Fe82a05 "drip(address)" YOUR_ADDRESS --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+
+# Arbitrum Sepolia - Get CCIP-BnM tokens
 cast call 0xA8C0c11bf64AF62CDCA6f93D3769B88BdD7cb93D "drip(address)" YOUR_ADDRESS --rpc-url $ARBITRUM_SEPOLIA_RPC_URL
 ```
 
-### 🔧 **Check if WETH is Mock**
-
+### Mock WETH (Local testing tokens)
 ```bash
-# Mock WETH has mint function (real WETH doesn't)
-cast call 0xe95dd35Ef9dCafD0e570D378Fa04527c22A87911 "mint(address,uint256)" YOUR_ADDRESS 1000000000000000000 --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+# Ethereum Sepolia - Mint WETH
+cast send 0xe95595f0BE77d6CF079795Ed63942933E9a6bf7b "mint(address,uint256)" YOUR_ADDRESS 1000000000000000000 --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+
+# Arbitrum Sepolia - Mint WETH  
+cast send 0x21ADF7b3F3AeA141E0b8544bF9de7e1e0CA21578 "mint(address,uint256)" YOUR_ADDRESS 1000000000000000000 --rpc-url $ARBITRUM_SEPOLIA_RPC_URL
 ```
 
-### 🌉 **Verify CCIP Registration**
+## Important Notes
 
-```bash
-# Check if CCIP-BnM is registered in CCIP pools
-# Real tokens return pool addresses, mock tokens would fail
-cast call CCIP_ROUTER "getPool(address)" 0xFd57b4ddBf88a4e07fF4e34C487b99af2Fe82a05 --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
-```
+### For Production
+- Replace Mock WETH → Real WETH (`0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2`)
+- Replace Mock pools → Real Uniswap V2/V3 pools
+- Test on testnets first, then deploy to mainnet
 
----
+### Pool Mechanics
+- **Reserves**: Check current liquidity with `getReserves()`
+- **Prices**: Calculated as `reserve1/reserve0` ratio
+- **Arbitrage**: Profit from price differences between chains
 
-## 🎯 **Key Takeaways**
+### CCIP Integration
+- CCIP-BnM tokens can be transferred cross-chain
+- Burn & Mint mechanism ensures 1:1 token ratio
+- Real tokens work with Chainlink CCIP infrastructure
 
-### ✅ **What We've Built**
-
-1. **Hybrid Token Strategy**: Mix real CCIP infrastructure with controlled test environment
-2. **Real Cross-Chain**: Actual CCIP token transfers between testnets
-3. **Functional Arbitrage**: Working price discovery and execution logic
-4. **Production Ready**: Core logic works with any ERC20 token pair
-
-### 🔄 **Migration to Production**
-
-```
-To go live on mainnet:
-├── Replace Mock WETH → Real WETH  
-├── Replace CCIP-BnM → Real USDC (CCIP-supported)
-├── Use Real Uniswap V3 pools
-├── Fund with real LINK tokens
-└── Deploy on mainnet with same contract logic
-```
-
-### 🧠 **Why This Approach is Smart**
-
-- **Cost Effective**: Test complex logic without expensive mainnet tokens
-- **Risk Mitigation**: Validate all integrations before risking real funds  
-- **Real Infrastructure**: CCIP, Functions, Automation all use real testnets
-- **Easy Migration**: Contract logic remains the same for mainnet
-
----
-
-**🎉 This setup gives us a perfect testing environment that validates all the real-world components while keeping costs minimal!** 
+### New Deployment Benefits
+- ✅ **Clean Addresses**: No more dummy/hardcoded addresses
+- 🔒 **Secure Setup**: Circular dependencies properly resolved
+- 🚀 **Fresh Start**: New contracts with improved architecture
+- 💰 **Cost Efficient**: Total deployment under 0.001 ETH

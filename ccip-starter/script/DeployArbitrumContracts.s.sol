@@ -15,7 +15,6 @@ contract DeployArbitrumContracts is Script {
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address treasury = vm.envAddress("TREASURY_ADDRESS");
-        address bundleExecutor = vm.envAddress("BUNDLE_EXECUTOR_ADDRESS"); // From Ethereum deployment
         
         vm.startBroadcast(deployerPrivateKey);
         
@@ -36,14 +35,13 @@ contract DeployArbitrumContracts is Script {
         address pair = factory.createPair(address(weth), ARBITRUM_CCIP_BNM);
         console.log("WETH/CCIP-BnM pair created at:", pair);
         
-        // Deploy RemoteExecutor
+        // Deploy RemoteExecutor WITHOUT BundleExecutor address (will be set later via setter)
         RemoteExecutor remoteExecutor = new RemoteExecutor(
             ARBITRUM_ROUTER,
             address(weth),
             ARBITRUM_CCIP_BNM, // Use CCIP-BnM as the token that will be received
             address(router),
             treasury,
-            bundleExecutor,
             ETHEREUM_CHAIN_SELECTOR
         );
         console.log("RemoteExecutor deployed at:", address(remoteExecutor));
@@ -58,6 +56,6 @@ contract DeployArbitrumContracts is Script {
         console.log("RemoteExecutor:", address(remoteExecutor));
         console.log("CCIP-BnM Token:", ARBITRUM_CCIP_BNM);
         console.log("Treasury:", treasury);
-        console.log("Authorized BundleExecutor:", bundleExecutor);
+        console.log("\nNOTE: Remember to call remoteExecutor.setAuthorizedSender() after deploying BundleExecutor on Ethereum");
     }
 } 
