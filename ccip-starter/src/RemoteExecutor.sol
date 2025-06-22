@@ -27,8 +27,11 @@ contract RemoteExecutor is CCIPReceiver, Withdraw {
     /// @notice Treasury address that receives the arbitrage profits
     address public immutable profitTreasury;
     
-    /// @notice Authorized BundleExecutor address on source chain
-    address public immutable authorizedSender;
+    /// @notice Authorized BundleExecutor address on source chain - Now mutable to fix circular dependency
+    address public authorizedSender;
+    
+    /// @notice Flag to ensure authorized sender can only be set once
+    bool public authorizedSenderSet;
     
     /// @notice Source chain selector (Ethereum Sepolia)
     uint64 public immutable sourceChainSelector;
@@ -45,6 +48,7 @@ contract RemoteExecutor is CCIPReceiver, Withdraw {
     );
     event MinProfitThresholdUpdated(uint256 newThreshold);
     event EmergencyWithdrawal(address token, uint256 amount);
+    event AuthorizedSenderSet(address indexed authorizedSender);
 
     /// @notice Errors
     error UnauthorizedSender();
@@ -52,6 +56,9 @@ contract RemoteExecutor is CCIPReceiver, Withdraw {
     error SwapFailed();
     error InsufficientProfit();
     error TransferFailed();
+    error AuthorizedSenderAlreadySet();
+    error AuthorizedSenderNotSet();
+    error ZeroAddress();
 
     /**
      * @notice Constructor
@@ -60,7 +67,6 @@ contract RemoteExecutor is CCIPReceiver, Withdraw {
      * @param _usdc USDC token address on Arbitrum
      * @param _uniswapRouter Uniswap V2 Router address on Arbitrum
      * @param _profitTreasury Treasury address for profits
-     * @param _authorizedSender Authorized BundleExecutor address
      * @param _sourceChainSelector Source chain selector (Ethereum Sepolia)
      */
     constructor(
@@ -69,15 +75,27 @@ contract RemoteExecutor is CCIPReceiver, Withdraw {
         address _usdc,
         address _uniswapRouter,
         address _profitTreasury,
-        address _authorizedSender,
         uint64 _sourceChainSelector
     ) CCIPReceiver(_router) {
         weth = _weth;
         usdc = _usdc;
         uniswapRouter = _uniswapRouter;
         profitTreasury = _profitTreasury;
-        authorizedSender = _authorizedSender;
         sourceChainSelector = _sourceChainSelector;
+    }
+
+    /**
+     * @notice Sets the authorized sender address - can only be called once by owner
+     * @param _authorizedSender Address of the BundleExecutor contract on Ethereum
+     */
+    function setAuthorizedSender(address _authorizedSender) external onlyOwner {
+        if (authorizedSenderSet) revert AuthorizedSenderAlreadySet();
+        if (_authorizedSender == address(0)) revert ZeroAddress();
+        
+        authorizedSender = _authorizedSender;
+        authorizedSenderSet = true;
+        
+        emit AuthorizedSenderSet(_authorizedSender);
     }
 
     /**
@@ -94,6 +112,9 @@ contract RemoteExecutor is CCIPReceiver, Withdraw {
      * @param message The CCIP message containing USDC and swap instructions
      */
     function _ccipReceive(Client.Any2EVMMessage memory message) internal override {
+        // Check if authorized sender is set
+        if (!authorizedSenderSet) revert AuthorizedSenderNotSet();
+        
         // Verify the message is from authorized sender and source chain
         if (message.sourceChainSelector != sourceChainSelector) {
             revert UnauthorizedChain();
@@ -242,6 +263,11 @@ contract RemoteExecutor is CCIPReceiver, Withdraw {
     function getTokenBalance(address token) external view returns (uint256 balance) {
         balance = IERC20(token).balanceOf(address(this));
     }
+    
+    /**
+     * @notice Allows contract to receive ETH for gas costs
+     */
+    receive() external payable {}
 }
 
 /**

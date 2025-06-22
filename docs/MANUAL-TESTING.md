@@ -1,349 +1,270 @@
-# 🧪 Manual Testing Guide - Cross-Chain Arbitrage Protocol
+# Manual Testing Guide
 
-## 🎯 Complete Manual Testing Commands
-
-This guide provides all commands needed to manually test the https://meet.google.com/vxz-qkow-quxcross-chain arbitrage flow with the **FIXED** deployment addresses.
-
-## ✅ **ISSUE RESOLVED**
-- **❌ OLD**: BundleExecutor sent CCIP messages to dummy address `0x1234...7890`
-- **✅ NEW**: BundleExecutor correctly sends to real RemoteExecutor `0xE6C31609f971A928BB6C98Ca81A01E2930496137`
-
----
-
-## 🔧 Environment Setup
-
+## Environment Setup
 ```bash
-# Set environment variables
 export PRIVATE_KEY=0x9971812261ecfc8d83860eaceff14ab42748678da818e0ab8a586f6dde6adb2d
 export ETHEREUM_SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/xiJw6cj_7U8PXLSncrSON78PWDXP4Dkl
 export ARBITRUM_SEPOLIA_RPC_URL=https://arb-sepolia.g.alchemy.com/v2/xiJw6cj_7U8PXLSncrSON78PWDXP4Dkl
 
-# Contract addresses (UPDATED - NEW DEPLOYMENT)
+export BUNDLE_EXECUTOR=0xB20412c4403277A6dD64e0D0dCa19F81b5412cBA
 export PLAN_STORE=0x1177D6F59e9877D6477743C6961988D86ee78174
-export BUNDLE_EXECUTOR=0x9b2a205d2E48ED34AA4c9756E3BBc540Ff6c74cd  # ✅ FIXED
 export FUNCTIONS_CONSUMER=0x2eEbcC4807A0a8C95610E764369D0eeCEC5a655f
-export REMOTE_EXECUTOR=0xE6C31609f971A928BB6C98Ca81A01E2930496137
-
-# Token addresses - Ethereum Sepolia (UPDATED)
-export ETH_WETH=0x9871314Bd78FE5191Cfa2145f2aFe1843624475A      # ✅ NEW
-export ETH_CCIP_BNM=0xFd57b4ddBf88a4e07fF4e34C487b99af2Fe82a05   # Same
-export ETH_LINK=0x779877A7B0D9E8603169DdbD7836e478b4624789      # Same
-
-# Token addresses - Arbitrum Sepolia  
-export ARB_WETH=0x9BAd0F20eB62a2238c9849A7cE50FCafdE0E1481
-export ARB_CCIP_BNM=0xA8C0c11bf64AF62CDCA6f93D3769B88BdD7cb93D
-
-# Pair addresses (UPDATED)
-export ETH_PAIR=0x9a48295601B66898Aad6cBE9171503212eEe37A4      # ✅ NEW
-export ARB_PAIR=0x7DCA1D3AcAcdA7cDdCAD345FB1CDC6109787914F
+export REMOTE_EXECUTOR=0x45ee7AA56775aB9385105393458FC4e56b4B578c
 ```
 
----
+## Contract Verification
 
-## 🎉 **CONFIRMED WORKING**
-
-**✅ Latest Successful Test:**
-- **Transaction**: `0x362499ec0232b9966cc82f4e385115886f96342b39e0a86e589c9b6582fe5542`
-- **WETH Swapped**: 1.0 WETH → 0.027 CCIP-BnM
-- **CCIP Fee**: 0.043 LINK
-- **Destination**: `0xE6C31609f971A928BB6C98Ca81A01E2930496137` ✅
-- **CCIP Explorer**: https://ccip.chain.link/ (search by transaction hash)
-
----
-
-## 📋 Step-by-Step Manual Testing
-
-### Step 1: Check Initial System Status
-
+### Check Circular Dependencies (NEW!)
 ```bash
-# Check BundleExecutor balances
-cast call $ETH_WETH "balanceOf(address)" $BUNDLE_EXECUTOR --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
-cast call $ETH_LINK "balanceOf(address)" $BUNDLE_EXECUTOR --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+# Verify BundleExecutor knows RemoteExecutor
+cast call $BUNDLE_EXECUTOR "remoteExecutor()" --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+# Should return: 0x45ee7AA56775aB9385105393458FC4e56b4B578c
 
-# Check plan and automation status
-cast call $PLAN_STORE "shouldExecute()" --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
-cast call $BUNDLE_EXECUTOR "checkUpkeep(bytes)" 0x --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+# Verify RemoteExecutor knows BundleExecutor  
+cast call $REMOTE_EXECUTOR "authorizedSender()" --rpc-url $ARBITRUM_SEPOLIA_RPC_URL
+# Should return: 0xB20412c4403277A6dD64e0D0dCa19F81b5412cBA
+
+# Verify setter flags are set
+cast call $BUNDLE_EXECUTOR "remoteExecutorSet()" --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+# Should return: true
+
+cast call $REMOTE_EXECUTOR "authorizedSenderSet()" --rpc-url $ARBITRUM_SEPOLIA_RPC_URL  
+# Should return: true
 ```
 
-### Step 2: Check Pool Reserves & Prices
-
+### Check PlanStore Configuration
 ```bash
-# Check pool reserves
-cast call $ETH_PAIR "getReserves()" --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
-cast call $ARB_PAIR "getReserves()" --rpc-url $ARBITRUM_SEPOLIA_RPC_URL
+# Verify PlanStore knows the correct BundleExecutor
+cast call $PLAN_STORE "bundleExecutor()" --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+# Should return: 0x000000000000000000000000b20412c4403277a6dd64e0d0dca19f81b5412cba
 
-# Check gas prices
-cast gas-price --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
-cast gas-price --rpc-url $ARBITRUM_SEPOLIA_RPC_URL
-```
-
-### Step 3: Store Manual Test Plan
-
-```bash
-# Store test plan (1 WETH, 50 basis points edge, 50 gwei max gas)
-cast send $FUNCTIONS_CONSUMER "storeTestPlan()" --private-key $PRIVATE_KEY --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
-```
-
-### Step 4: Verify Plan Storage & Automation Trigger
-
-```bash
-# Verify plan stored and automation ready
-cast call $PLAN_STORE "shouldExecute()" --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
-cast call $BUNDLE_EXECUTOR "checkUpkeep(bytes)" 0x --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
-```
-
-### Step 5: Monitor Automation Execution
-
-```bash
-echo "=== MONITORING AUTOMATION ==="
-
-echo "⚠️  IMPORTANT: You need to register NEW Chainlink Automation!"
-echo "Old upkeep points to wrong BundleExecutor address."
-echo ""
-echo "Register NEW upkeep at: https://automation.chain.link/"
-echo "Target Contract: $BUNDLE_EXECUTOR"
-echo "Trigger: Custom Logic (NOT time-based)"
-echo "Gas Limit: 1,000,000"
-echo "Fund with: 5+ LINK tokens"
-echo ""
-
-echo "Expected execution flow:"
-echo "1. ✅ checkUpkeep() returns true"
-echo "2. 🤖 Chainlink calls performUpkeep()"
-echo "3. 🔄 WETH → CCIP-BnM swap on Ethereum"
-echo "4. 🌉 CCIP message sent to Arbitrum"
-echo "5. 🔄 CCIP-BnM → WETH swap on Arbitrum"
-echo "6. 💰 Profits sent to treasury"
-
-echo ""
-echo "Wait 60 seconds, then run Step 6 to check results..."
-```
-
-### Step 6: Check Execution Results
-
-```bash
-# Check plan cleared (should be false)
-cast call $PLAN_STORE "shouldExecute()" --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
-
-# Check BundleExecutor balances after execution
-cast call $ETH_WETH "balanceOf(address)" $BUNDLE_EXECUTOR --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
-cast call $ETH_CCIP_BNM "balanceOf(address)" $BUNDLE_EXECUTOR --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
-
-# Check treasury profits on Arbitrum
-cast call $ARB_WETH "balanceOf(address)" 0x28ea4eF61ac4cca3ed6a64dBb5b2D4be1aDC9814 --rpc-url $ARBITRUM_SEPOLIA_RPC_URL
-```
-
-### Step 7: CCIP Message Tracking
-
-**🌉 CCIP Explorer**: https://ccip.chain.link/
-
-**Search Parameters:**
-- **Source**: Ethereum Sepolia → Arbitrum Sepolia
-- **Sender**: `$BUNDLE_EXECUTOR`
-- **Receiver**: `$REMOTE_EXECUTOR`
-
----
-
-## 🚀 **Quick Test with Improved Script**
-
-### Option A: Use the Improved Execution Script
-```bash
-# This script automatically stores a plan and executes the arbitrage
-forge script script/ExecuteAndGetCCIP.s.sol \
-  --rpc-url $ETHEREUM_SEPOLIA_RPC_URL \
-  --broadcast \
+# If wrong BundleExecutor address, update it (owner only):
+cast send $PLAN_STORE "setBundleExecutor(address)" $BUNDLE_EXECUTOR \
   --private-key $PRIVATE_KEY \
-  -vv
+  --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+
+# Verify Functions Consumer is set correctly
+cast call $PLAN_STORE "functionsConsumer()" --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+# Should return: 0x0000000000000000000000002eebcc4807a0a8c95610e764369d0eecec5a655f
 ```
 
-**This script will:**
-1. ✅ Check current system status
-2. ✅ Store test plan automatically if none exists  
-3. ✅ Execute arbitrage immediately
-4. ✅ Show CCIP transaction details
-5. ✅ Provide CCIP Explorer links
+## Balance Checks
 
----
-
-## 🔄 Manual Test Scenarios
-
-### Scenario A: Basic Automation Test
+### Ethereum Sepolia
 ```bash
-# Quick test to verify automation works
-cast send $FUNCTIONS_CONSUMER "storeTestPlan()" --private-key $PRIVATE_KEY --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+# WETH balance
+cast call 0xe95595f0BE77d6CF079795Ed63942933E9a6bf7b "balanceOf(address)" $BUNDLE_EXECUTOR --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+# LINK balance  
+cast call 0x779877A7B0D9E8603169DdbD7836e478b4624789 "balanceOf(address)" $BUNDLE_EXECUTOR --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+```
 
-# Wait 30 seconds, then check
+### Arbitrum Sepolia
+```bash
+# WETH balance
+cast call 0x21ADF7b3F3AeA141E0b8544bF9de7e1e0CA21578 "balanceOf(address)" $REMOTE_EXECUTOR --rpc-url $ARBITRUM_SEPOLIA_RPC_URL
+```
+
+## Pool Analysis
+
+### Current Pool States
+
+#### Ethereum Sepolia Pool
+```bash
+# Check current reserves
+cast call 0xd7471664f91C43c5c3ed2B06734b4a392D94Fe16 "getReserves()" --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+
+# Expected format: (reserve0, reserve1, blockTimestampLast)
+# reserve0 = WETH amount, reserve1 = CCIP-BnM amount
+```
+
+#### Arbitrum Sepolia Pool  
+```bash
+# Check current reserves
+cast call 0xAc6D3a904c37c4B75F1823d1B0238d6d48D8bfB3 "getReserves()" --rpc-url $ARBITRUM_SEPOLIA_RPC_URL
+```
+
+## Test Functions Execution
+
+### 1. Store Arbitrage Plan
+```bash
+# Store test plan via Functions Consumer (bypasses real Functions call)
+cast send $FUNCTIONS_CONSUMER "storeTestPlan()" \
+  --private-key $PRIVATE_KEY \
+  --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+
+# OR use the full execution script
+forge script script/ExecuteAndGetCCIP.s.sol --rpc-url $ETHEREUM_SEPOLIA_RPC_URL --broadcast
+```
+
+### 2. Check Plan Storage
+```bash
+# Check if plan should execute (expires after 5 minutes!)
 cast call $PLAN_STORE "shouldExecute()" --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+# Should return: 0x0000000000000000000000000000000000000000000000000000000000000001 (true)
+
+# Get full plan details
+cast call $PLAN_STORE "getCurrentPlan()" --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+# Returns: (execute, amount, minEdgeBps, maxGasGwei, timestamp)
+# Example: execute=true, amount=1000000000000000000 (1 ETH), minEdgeBps=50, maxGasGwei=50, timestamp=1750548636
 ```
 
-### Scenario B: Multiple Plan Testing
+### 3. Test Manual BundleExecutor
+
+#### Check Automation Conditions
 ```bash
-# Store plan
-cast send $FUNCTIONS_CONSUMER "storeTestPlan()" --private-key $PRIVATE_KEY --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
-
-# Wait for execution (plan should be cleared)
-sleep 60
-
-# Store another plan  
-cast send $FUNCTIONS_CONSUMER "storeTestPlan()" --private-key $PRIVATE_KEY --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
-
-# Monitor second execution
+# Check if upkeep is needed (should return true)
+cast call $BUNDLE_EXECUTOR "checkUpkeep(bytes)" 0x --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+# Returns: (upkeepNeeded, performData)
+# Expected: 0x000000000000000000000000000000000000000000000000000000000000000100000... (true, empty data)
 ```
 
-### Scenario C: Manual Plan Clearing
+#### Debug Individual Conditions (if checkUpkeep returns false)
 ```bash
-# Store test plan
-cast send $FUNCTIONS_CONSUMER "storeTestPlan()" --private-key $PRIVATE_KEY --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+echo "=== DEBUGGING AUTOMATION CONDITIONS ==="
 
-# Manually clear before automation executes
-cast send $PLAN_STORE "clearPlan()" --private-key $PRIVATE_KEY --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+echo "1. Remote Executor Set:"
+cast call $BUNDLE_EXECUTOR "remoteExecutorSet()" --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+# Expected: 0x0000000000000000000000000000000000000000000000000000000000000001 (true)
 
-# Verify plan cleared
+echo "2. Plan Should Execute:"
 cast call $PLAN_STORE "shouldExecute()" --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
-```
+# Expected: 0x0000000000000000000000000000000000000000000000000000000000000001 (true)
 
----
-
-## 🛠️ Troubleshooting Commands
-
-### Check Automation Status
-```bash
-# Check if automation should trigger
-cast call $PLAN_STORE "shouldExecute()" --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
-
-# Check sufficient balances (need 1+ WETH, 0.1+ LINK)
-cast call $ETH_WETH "balanceOf(address)" $BUNDLE_EXECUTOR --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
-cast call $ETH_LINK "balanceOf(address)" $BUNDLE_EXECUTOR --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
-
-# Check gas price
+echo "3. Gas Price Check:"
 cast gas-price --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+echo "Max Gas Price (50 gwei = 50000000000):"
+cast call $BUNDLE_EXECUTOR "maxGasPrice()" --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+# Gas price should be <= 50000000000
+
+echo "4. WETH Balance Check:"
+cast call 0xe95595f0BE77d6CF079795Ed63942933E9a6bf7b "balanceOf(address)" $BUNDLE_EXECUTOR --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+echo "Plan Amount Required:"
+cast call $PLAN_STORE "getCurrentPlan()" --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+# WETH balance should be >= plan amount
 ```
 
-### Reset System State
+#### Manual Execution (if upkeep needed)
 ```bash
-# Clear existing plan and verify
-cast send $PLAN_STORE "clearPlan()" --private-key $PRIVATE_KEY --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
-cast call $PLAN_STORE "shouldExecute()" --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+# Execute manually for testing
+cast send $BUNDLE_EXECUTOR "performUpkeep(bytes)" 0x \
+  --rpc-url $ETHEREUM_SEPOLIA_RPC_URL \
+  --private-key $PRIVATE_KEY \
+  --gas-limit 500000
 ```
 
-### Fund Contracts for Testing
-
-**🎯 Funding Requirements:**
-
-| Contract | Chain | WETH | CCIP-BnM | LINK | Notes |
-|----------|-------|------|----------|------|-------|
-| **BundleExecutor** | Ethereum | ✅ 1+ | ❌ No | ✅ 0.1+ | Source chain |
-| **RemoteExecutor** | Arbitrum | ❌ No | ❌ No | ❌ No | Receives via CCIP |
-
+### 🚀 Quick Testing Workflow (Beat the 5-minute timer!)
 ```bash
-# Fund BundleExecutor on Ethereum Sepolia
-# 1. Send WETH for arbitrage execution
-cast send $ETH_WETH "transfer(address,uint256)" $BUNDLE_EXECUTOR 1000000000000000000 --private-key $PRIVATE_KEY --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
-
-# 2. Send LINK for CCIP fees (0.1 LINK minimum)
-cast send $ETH_LINK "transfer(address,uint256)" $BUNDLE_EXECUTOR 100000000000000000 --private-key $PRIVATE_KEY --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
-```
-
-**❌ Do NOT fund RemoteExecutor** - it receives tokens automatically via CCIP
-
-**💡 Why only fund BundleExecutor?**
-- **WETH**: Needed for initial swap (WETH → CCIP-BnM)
-- **LINK**: Required for CCIP fees (paid on source chain)
-- **CCIP-BnM**: Generated from WETH swap, then sent cross-chain
-- **RemoteExecutor**: Receives CCIP-BnM via bridge, swaps to WETH
-
----
-
-## 📊 Expected Results
-
-### ✅ Successful Test Indicators:
-
-1. **Plan Storage**: `shouldExecute()` returns `true` after storing
-2. **Automation Ready**: `checkUpkeep()` returns `(true, 0x)`
-3. **Execution**: Plan gets cleared automatically within 30-60 seconds
-4. **Balance Changes**: WETH decreases, CCIP-BnM balance changes
-5. **CCIP Transfer**: Messages visible on CCIP explorer
-6. **Profits**: Treasury receives WETH on Arbitrum
-
-### ❌ Troubleshooting Issues:
-
-1. **Plan not stored**: Check Functions consumer authorization
-2. **Automation not triggering**: Verify gas price, balances, and upkeep funding
-3. **Execution fails**: Check LINK balance for CCIP fees
-4. **No CCIP message**: Verify router addresses and token approvals
-
----
-
-## 🎯 Complete Test Script (Updated)
-
-```bash
-#!/bin/bash
-# Complete automated test script with NEW addresses
-
-echo "🧪 STARTING MANUAL ARBITRAGE TEST (FIXED VERSION)"
-
-# Set environment variables
-export PLAN_STORE=0x1177D6F59e9877D6477743C6961988D86ee78174
-export BUNDLE_EXECUTOR=0x9b2a205d2E48ED34AA4c9756E3BBc540Ff6c74cd  # ✅ FIXED
-export FUNCTIONS_CONSUMER=0x2eEbcC4807A0a8C95610E764369D0eeCEC5a655f
-
-# Step 1: Environment check
-echo "=== STEP 1: ENVIRONMENT CHECK (NEW ADDRESSES) ==="
-echo "BundleExecutor: $BUNDLE_EXECUTOR"
-echo "Plan should execute:"
-cast call $PLAN_STORE "shouldExecute()" --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
-echo "Automation ready:"
-cast call $BUNDLE_EXECUTOR "checkUpkeep(bytes)" 0x --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
-
-# Step 2: Store test plan
-echo "=== STEP 2: STORING TEST PLAN ==="
+# Step 1: Store plan
 cast send $FUNCTIONS_CONSUMER "storeTestPlan()" --private-key $PRIVATE_KEY --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
 
-# Step 3: Verify trigger
-echo "=== STEP 3: VERIFYING TRIGGER ==="
+# Step 2: Immediately check conditions (run within 30 seconds)
 cast call $PLAN_STORE "shouldExecute()" --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
 cast call $BUNDLE_EXECUTOR "checkUpkeep(bytes)" 0x --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
 
-# Step 4: Manual execution (since automation needs to be re-registered)
-echo "=== STEP 4: MANUAL EXECUTION ==="
-echo "⚠️  Register new automation at: https://automation.chain.link/"
-echo "Target: $BUNDLE_EXECUTOR"
-echo ""
-echo "Or execute manually now:"
-forge script script/ExecuteAndGetCCIP.s.sol --rpc-url $ETHEREUM_SEPOLIA_RPC_URL --broadcast --private-key $PRIVATE_KEY -vv
-
-# Step 5: Verify results
-echo "=== STEP 5: CHECKING RESULTS ==="
-cast call $PLAN_STORE "shouldExecute()" --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
-
-echo "🎉 TEST COMPLETE!"
-echo "✅ System confirmed working with correct CCIP destination!"
-echo "📊 Latest success: 0x362499ec0232b9966cc82f4e385115886f96342b39e0a86e589c9b6582fe5542"
+# Step 3: Execute immediately if conditions are met
+cast send $BUNDLE_EXECUTOR "performUpkeep(bytes)" 0x --rpc-url $ETHEREUM_SEPOLIA_RPC_URL --private-key $PRIVATE_KEY --gas-limit 500000
 ```
 
-**Save this as `test_arbitrage_fixed.sh` and run with `bash test_arbitrage_fixed.sh`**
+### 4. Monitor CCIP Messages
+After execution, check:
+- Transaction hash from performUpkeep call
+- Look for ArbitrageExecuted event with CCIP messageId
+- Track message on CCIP Explorer: https://ccip.chain.link/
 
----
+## Balance Verification After Execution
 
-## 🎯 **Key Takeaways**
+### Ethereum Side
+```bash
+# Check remaining WETH in BundleExecutor
+cast call 0xe95595f0BE77d6CF079795Ed63942933E9a6bf7b "balanceOf(address)" $BUNDLE_EXECUTOR --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
 
-### ✅ **What Was Fixed**
-1. **PlanStore Address Mismatch**: Functions Consumer and BundleExecutor now use same PlanStore
-2. **CCIP Destination**: Messages now go to real RemoteExecutor `0xE6C31609f971A928BB6C98Ca81A01E2930496137`
-3. **Contract Addresses**: All updated to new deployment with correct configuration
+# Check CCIP-BnM sent
+cast call 0xFd57b4ddBf88a4e07fF4e34C487b99af2Fe82a05 "balanceOf(address)" $BUNDLE_EXECUTOR --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+```
 
-### 🚨 **What You Need to Do**
-1. **Fund BundleExecutor**: WETH (1+) + LINK (0.1+) on Ethereum Sepolia
-2. **Register NEW Chainlink Automation** (old one invalid)
-3. **Use updated addresses** from this guide
-4. **Test manually** using provided scripts
+### Arbitrum Side  
+```bash
+# Check WETH received by RemoteExecutor
+cast call 0x21ADF7b3F3AeA141E0b8544bF9de7e1e0CA21578 "balanceOf(address)" 0x28ea4eF61ac4cca3ed6a64dBb5b2D4be1aDC9814 --rpc-url $ARBITRUM_SEPOLIA_RPC_URL
+```
 
-### 🎉 **System Status**
-- ✅ **Manual execution**: Confirmed working
-- ✅ **CCIP messages**: Reaching correct destination  
-- ✅ **Arbitrage flow**: End-to-end functional
-- ⚠️ **Automation**: Needs new upkeep registration
+## Automation Setup
 
----
+### Chainlink Automation Registration
+- **Network**: Ethereum Sepolia
+- **Target**: `0xB20412c4403277A6dD64e0D0dCa19F81b5412cBA`
+- **Admin**: `0xbb0235ADdc0d3C23bF3904Fc47EB6284328fFB5E`
+- **Check Data**: `0x` (empty)
+- **Gas Limit**: `500,000`
+- **Trigger**: Custom Logic
 
-**🚀 The core issue is FIXED! This manual testing guide verifies the complete corrected arbitrage flow!** 
+### Expected Flow:
+1. ✅ Functions Consumer stores profitable plan
+2. ✅ Automation detects plan via checkUpkeep()
+3. ✅ BundleExecutor executes arbitrage via performUpkeep()
+4. ✅ CCIP message sent to RemoteExecutor with tokens
+5. ✅ RemoteExecutor completes arbitrage and sends profit to treasury
+
+## Troubleshooting
+
+### Common Issues:
+
+1. **checkUpkeep returns false / Plan expired**
+   ```bash
+   # Plans expire after 5 minutes! Store fresh plan:
+   cast send $FUNCTIONS_CONSUMER "storeTestPlan()" \
+     --private-key $PRIVATE_KEY \
+     --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+   ```
+
+2. **"No valid plan" error**
+   - Check if Functions Consumer has stored a plan
+   - Verify plan hasn't expired (5 minute limit)
+   - Store fresh plan using command above
+
+3. **"RemoteExecutorNotSet" error**  
+   ```bash
+   # Run the SetCircularAddresses script
+   export REMOTE_EXECUTOR_ADDRESS=0x45ee7AA56775aB9385105393458FC4e56b4B578c
+   forge script script/SetCircularAddresses.s.sol:SetCircularAddresses \
+     --rpc-url $ETHEREUM_SEPOLIA_RPC_URL --broadcast
+   ```
+
+4. **Gas price too high**
+   ```bash
+   # Check current vs max gas price
+   cast gas-price --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+   cast call $BUNDLE_EXECUTOR "maxGasPrice()" --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+   # If needed, increase max gas price (owner only)
+   ```
+
+5. **Insufficient WETH balance**
+   ```bash
+   # Add more WETH to BundleExecutor
+   cast send 0xe95595f0BE77d6CF079795Ed63942933E9a6bf7b "mint(address,uint256)" \
+     $BUNDLE_EXECUTOR 1000000000000000000 \
+     --private-key $PRIVATE_KEY --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+   ```
+
+6. **Plan expiration timing (CRITICAL)**
+   - **Plans expire after 5 minutes** - this is the #1 cause of issues
+   - **Automation checks every 30s-2min** - might miss short-lived plans
+   - **Solution 1**: Store plan → immediately test manually
+   - **Solution 2**: Set up real Chainlink Functions for continuous plan generation
+   - **Testing tip**: Run commands in quick succession after storing plan
+
+7. **Wrong BundleExecutor in PlanStore**
+   ```bash
+   # Check current BundleExecutor in PlanStore
+   cast call $PLAN_STORE "bundleExecutor()" --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+   
+   # Update if wrong (owner only)
+   cast send $PLAN_STORE "setBundleExecutor(address)" $BUNDLE_EXECUTOR \
+     --private-key $PRIVATE_KEY \
+     --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+   ```
+
+### New Architecture Benefits:
+- 🔒 **Clean Setup**: No more dummy addresses 
+- ✅ **Proper Auth**: Circular dependencies resolved cleanly
+- 🚀 **Reliable**: One-time setters prevent configuration issues

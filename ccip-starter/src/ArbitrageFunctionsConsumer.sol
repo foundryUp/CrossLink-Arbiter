@@ -119,4 +119,87 @@ contract GettingStartedFunctionsConsumer is FunctionsClient, ConfirmedOwner {
     function execute() public view returns (string memory){
         return character;
     }
+<<<<<<< HEAD
 }
+=======
+
+    /**
+     * @notice Update token addresses (only owner)
+     */
+    function updateTokenAddresses(
+        address _ethereumWETH,
+        address _ethereumCCIPBnM,
+        address _arbitrumWETH,
+        address _arbitrumCCIPBnM
+    ) external onlyOwner {
+        ethereumWETH = _ethereumWETH;
+        ethereumCCIPBnM = _ethereumCCIPBnM;
+        arbitrumWETH = _arbitrumWETH;
+        arbitrumCCIPBnM = _arbitrumCCIPBnM;
+        emit TokenAddressesUpdated(_ethereumWETH, _ethereumCCIPBnM, _arbitrumWETH, _arbitrumCCIPBnM);
+    }
+
+    /**
+     * @notice Manual trigger for testing
+     */
+    function manualTrigger() external onlyOwner returns (bytes32) {
+        return this.sendRequest();
+    }
+
+    /**
+     * @notice Store a test arbitrage plan for automation testing
+     * @dev This bypasses Functions and directly stores a plan to test automation
+     */
+    function storeTestPlan() external onlyOwner {
+        // Create test arbitrage plan
+        PlanStore.ArbitragePlan memory testPlan = PlanStore.ArbitragePlan({
+            execute: true,
+            amount: 1 ether, // 1 WETH
+            minEdgeBps: 50,   // 0.5%
+            maxGasGwei: 50,   // 50 gwei
+            timestamp: 0      // Will be set by PlanStore
+        });
+        
+        // Store plan in PlanStore - this will trigger automation!
+        planStore.fulfillPlan(abi.encode(testPlan));
+    }
+
+    /**
+     * @notice Converts address to hex string for Functions arguments
+     */
+    function toHexString(address addr) internal pure returns (string memory) {
+        bytes memory data = abi.encodePacked(addr);
+        bytes memory alphabet = "0123456789abcdef";
+        bytes memory str = new bytes(2 + data.length * 2);
+        str[0] = "0";
+        str[1] = "x";
+        for (uint256 i = 0; i < data.length; i++) {
+            str[2 + i * 2] = alphabet[uint256(uint8(data[i] >> 4))];
+            str[3 + i * 2] = alphabet[uint256(uint8(data[i] & 0x0f))];
+        }
+        return string(str);
+    }
+
+    /**
+     * @notice Get configuration info
+     */
+    function getConfig() external view returns (
+        uint64 _subscriptionId,
+        address _planStore,
+        address _ethereumPair,
+        address _arbitrumPair,
+        uint256 _lastRequestTimestamp,
+        uint256 _requestCount
+    ) {
+        return (
+            subscriptionId,
+            address(planStore),
+            ethereumPair,
+            arbitrumPair,
+            lastRequestTimestamp,
+            requestCount
+        );
+    }
+} 
+ 
+>>>>>>> 32cc54e40a7cfef55c91f0af3cc41e29bec63e10

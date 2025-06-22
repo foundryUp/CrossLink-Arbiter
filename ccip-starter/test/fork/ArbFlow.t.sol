@@ -501,5 +501,86 @@ contract ArbFlowTest is Test {
     function getReserves(address pair) internal view returns (uint112, uint112, uint32) {
         return MockUniswapV2Pair(pair).getReserves();
     }
+
+    // Test the complete cross-chain flow step by step
+    function testFullCrossChainFlow() external {
+        console.log("=== Testing Complete Cross-Chain Flow ===");
+        
+        // Create arbitrage plan
+        vm.selectFork(ethereumSepoliaFork);
+        vm.startPrank(functionsConsumer);
+        
+        PlanStore.ArbitragePlan memory plan = PlanStore.ArbitragePlan({
+            execute: true,
+            amount: 1 ether,
+            minEdgeBps: 50,
+            maxGasGwei: 50,
+            timestamp: 0
+        });
+        
+        planStore.fulfillPlan(abi.encode(plan));
+        vm.stopPrank();
+        
+        // Check automation is ready
+        (bool upkeepNeeded,) = bundleExecutor.checkUpkeep("");
+        assertTrue(upkeepNeeded, "Automation should be ready");
+        
+        // Record initial balances
+        uint256 initialBundleWETH = ethereumWETH.balanceOf(address(bundleExecutor));
+        uint256 initialBundleLINK = ethereumLinkToken.balanceOf(address(bundleExecutor));
+        
+        vm.selectFork(arbitrumSepoliaFork);
+        uint256 initialTreasuryWETH = arbitrumWETH.balanceOf(treasury);
+        
+        // Execute arbitrage
+        vm.selectFork(ethereumSepoliaFork);
+        bundleExecutor.performUpkeep("");
+        
+        // Verify plan cleared
+        assertFalse(planStore.shouldExecute(), "Plan should be cleared");
+        
+        // Verify WETH was consumed
+        uint256 finalBundleWETH = ethereumWETH.balanceOf(address(bundleExecutor));
+        assertLt(finalBundleWETH, initialBundleWETH, "WETH should be consumed");
+        
+        // Verify LINK was consumed for CCIP
+        uint256 finalBundleLINK = ethereumLinkToken.balanceOf(address(bundleExecutor));
+        assertLt(finalBundleLINK, initialBundleLINK, "LINK should be consumed for CCIP");
+        
+        // Route CCIP message to Arbitrum
+        ccipLocalSimulatorFork.switchChainAndRouteMessage(arbitrumSepoliaFork);
+        
+        // Verify treasury received WETH on Arbitrum
+        vm.selectFork(arbitrumSepoliaFork);
+        uint256 finalTreasuryWETH = arbitrumWETH.balanceOf(treasury);
+        assertGt(finalTreasuryWETH, initialTreasuryWETH, "Treasury should receive WETH");
+        
+        // Log results with detailed verification
+        uint256 wethUsed = initialBundleWETH - finalBundleWETH;
+        uint256 wethReceived = finalTreasuryWETH - initialTreasuryWETH;
+        uint256 linkUsed = initialBundleLINK - finalBundleLINK;
+        
+        console.log("=== CROSS-CHAIN FLOW VERIFICATION ===");
+        console.log("Step 1 - WETH consumed on Ethereum:");
+        console.logUint(wethUsed);
+        console.log("Step 2 - LINK consumed for CCIP fees:");
+        console.logUint(linkUsed);
+        console.log("Step 3 - CCIP message routed successfully");
+        console.log("Step 4 - WETH received by treasury on Arbitrum:");
+        console.logUint(wethReceived);
+        
+        // Verify each step worked
+        assertTrue(wethUsed > 0, "STEP 1 FAILED: No WETH was consumed for swap");
+        assertTrue(linkUsed > 0, "STEP 2 FAILED: No LINK was consumed for CCIP");
+        assertTrue(wethReceived > 0, "STEP 4 FAILED: Treasury received no WETH");
+        
+        console.log("ALL 4 STEPS VERIFIED:");
+        console.log("1. WETH -> CCIP-BnM swap: SUCCESS");
+        console.log("2. CCIP message sent: SUCCESS");
+        console.log("3. CCIP message received: SUCCESS");
+        console.log("4. CCIP-BnM -> WETH swap: SUCCESS");
+    }
+
+
 } 
  

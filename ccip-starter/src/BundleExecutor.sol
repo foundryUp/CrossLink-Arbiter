@@ -40,8 +40,11 @@ contract BundleExecutor is AutomationCompatibleInterface, Withdraw {
     /// @notice Destination chain selector for Arbitrum Sepolia
     uint64 public immutable destinationChainSelector;
     
-    /// @notice Remote executor address on Arbitrum
-    address public immutable remoteExecutor;
+    /// @notice Remote executor address on Arbitrum - Now mutable to fix circular dependency
+    address public remoteExecutor;
+    
+    /// @notice Flag to ensure remote executor can only be set once
+    bool public remoteExecutorSet;
     
     /// @notice WETH token address
     address public immutable weth;
@@ -64,12 +67,16 @@ contract BundleExecutor is AutomationCompatibleInterface, Withdraw {
     /// @notice Events
     event ArbitrageExecuted(uint256 wethAmount, uint256 usdcAmount, bytes32 ccipMessageId);
     event MaxGasPriceUpdated(uint256 newMaxGasPrice);
+    event RemoteExecutorSet(address indexed remoteExecutor);
 
     /// @notice Errors
     error GasPriceTooHigh();
     error SwapFailed();
     error InsufficientBalance();
     error CCIPSendFailed();
+    error RemoteExecutorAlreadySet();
+    error RemoteExecutorNotSet();
+    error ZeroAddress();
 
     /**
      * @notice Constructor
@@ -77,7 +84,6 @@ contract BundleExecutor is AutomationCompatibleInterface, Withdraw {
      * @param _ccipRouter Address of the CCIP router
      * @param _linkToken Address of LINK token
      * @param _destinationChainSelector Chain selector for Arbitrum Sepolia
-     * @param _remoteExecutor Address of RemoteExecutor on Arbitrum
      * @param _weth WETH token address
      * @param _ccipBnM CCIP-BnM token address
      * @param _uniswapRouter Uniswap V2 Router address
@@ -89,7 +95,6 @@ contract BundleExecutor is AutomationCompatibleInterface, Withdraw {
         address _ccipRouter,
         address _linkToken,
         uint64 _destinationChainSelector,
-        address _remoteExecutor,
         address _weth,
         address _ccipBnM,
         address _uniswapRouter,
@@ -100,12 +105,25 @@ contract BundleExecutor is AutomationCompatibleInterface, Withdraw {
         ccipRouter = IRouterClient(_ccipRouter);
         linkToken = LinkTokenInterface(_linkToken);
         destinationChainSelector = _destinationChainSelector;
-        remoteExecutor = _remoteExecutor;
         weth = _weth;
         ccipBnM = _ccipBnM;
         uniswapRouter = _uniswapRouter;
         ethereumPair = _ethereumPair;
         arbitrumPair = _arbitrumPair;
+    }
+
+    /**
+     * @notice Sets the remote executor address - can only be called once by owner
+     * @param _remoteExecutor Address of the RemoteExecutor contract on Arbitrum
+     */
+    function setRemoteExecutor(address _remoteExecutor) external onlyOwner {
+        if (remoteExecutorSet) revert RemoteExecutorAlreadySet();
+        if (_remoteExecutor == address(0)) revert ZeroAddress();
+        
+        remoteExecutor = _remoteExecutor;
+        remoteExecutorSet = true;
+        
+        emit RemoteExecutorSet(_remoteExecutor);
     }
 
     receive() external payable {}
@@ -127,6 +145,9 @@ contract BundleExecutor is AutomationCompatibleInterface, Withdraw {
     function checkUpkeep(
         bytes calldata /* checkData */
     ) external view override returns (bool upkeepNeeded, bytes memory performData) {
+        // Check if remote executor is set
+        if (!remoteExecutorSet) return (false, "");
+        
         // Check if there's a valid arbitrage plan
         bool shouldExecute = planStore.shouldExecute();
         
@@ -146,6 +167,8 @@ contract BundleExecutor is AutomationCompatibleInterface, Withdraw {
      * @dev Executes the arbitrage when conditions are met
      */
     function performUpkeep(bytes calldata /* performData */) external override {
+        if (!remoteExecutorSet) revert RemoteExecutorNotSet();
+        
         PlanStore.ArbitragePlan memory plan = planStore.getCurrentPlan();
         
         // Verify execution conditions
@@ -289,3 +312,4 @@ interface IUniswapV2Router {
     function getAmountsOut(uint amountIn, address[] calldata path)
         external view returns (uint[] memory amounts);
 } 
+ 
