@@ -116,4 +116,7 @@ contract GettingStartedFunctionsConsumer is FunctionsClient, ConfirmedOwner {
         // Emit an event to log the response
         emit Response(requestId, character, s_lastResponse, s_lastError);
     }
+    function execute() public view returns (string memory){
+        return character;
+    }
 }
