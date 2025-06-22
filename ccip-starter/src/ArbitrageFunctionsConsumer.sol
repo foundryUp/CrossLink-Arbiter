@@ -41,17 +41,16 @@ contract GettingStartedFunctionsConsumer is FunctionsClient, ConfirmedOwner {
     // JavaScript source code
     // Fetch character name from the Star Wars API.
     // Documentation: https://swapi.info/people
-        string source =
-        // "const ethpair = args[0]"
-        // "const arbpair = args[1]"
+    string source =
+        "const characterId = args[0];"
         "const apiResponse = await Functions.makeHttpRequest({"
-        "url: `https://625b-58-84-61-113.ngrok-free.app/api/analyze?ethPair=0x9a48295601B66898Aad6cBE9171503212eEe37A4&arbPair=0x7DCA1D3AcAcdA7cDdCAD345FB1CDC6109787914F`"
+        "url: `https://3c5d-58-84-61-113.ngrok-free.app/api/analyze?ethPair=0x9a48295601B66898Aad6cBE9171503212eEe37A4&arbPair=0x7DCA1D3AcAcdA7cDdCAD345FB1CDC6109787914F`"
         "});"
         "if (apiResponse.error) {"
         "throw Error('Request failed');"
         "}"
         "const { data } = apiResponse;"
-        "return Functions.encodeString(data.execute ? 1 : 0);";
+        "return Functions.encodeString(data.csv);";
 
     //Callback gas limit
     uint32 gasLimit = 300000;
@@ -72,16 +71,15 @@ contract GettingStartedFunctionsConsumer is FunctionsClient, ConfirmedOwner {
     /**
      * @notice Sends an HTTP request for character information
      * @param subscriptionId The ID for the Chainlink subscription
-     * @param args The arguments to pass to the HTTP request
      * @return requestId The ID of the request
      */
     function sendRequest(
-        uint64 subscriptionId,
-        string[] calldata args
+        uint64 subscriptionId
+        // string[] calldata args
     ) external onlyOwner returns (bytes32 requestId) {
         FunctionsRequest.Request memory req;
         req.initializeRequestForInlineJavaScript(source); // Initialize the request with JS code
-        if (args.length > 0) req.setArgs(args); // Set the arguments for the request
+        // if (args.length > 0) req.setArgs(args); // Set the arguments for the request
 
         // Send the request and store the request ID
         s_lastRequestId = _sendRequest(
@@ -116,90 +114,77 @@ contract GettingStartedFunctionsConsumer is FunctionsClient, ConfirmedOwner {
         // Emit an event to log the response
         emit Response(requestId, character, s_lastResponse, s_lastError);
     }
-    function execute() public view returns (string memory){
-        return character;
-    }
-<<<<<<< HEAD
-}
-=======
+    function splitAndParse()
+        public
+        view
+        returns (
+            bool    flag,
+            uint256 amount,
+            uint256 minEdgeBps,
+            uint256 maxGasGwei
+        )
+    {
+        string memory csv=string(character);
+        // 1) split into exactly 4 parts
+        string[4] memory parts = _split4(csv);
 
-    /**
-     * @notice Update token addresses (only owner)
-     */
-    function updateTokenAddresses(
-        address _ethereumWETH,
-        address _ethereumCCIPBnM,
-        address _arbitrumWETH,
-        address _arbitrumCCIPBnM
-    ) external onlyOwner {
-        ethereumWETH = _ethereumWETH;
-        ethereumCCIPBnM = _ethereumCCIPBnM;
-        arbitrumWETH = _arbitrumWETH;
-        arbitrumCCIPBnM = _arbitrumCCIPBnM;
-        emit TokenAddressesUpdated(_ethereumWETH, _ethereumCCIPBnM, _arbitrumWETH, _arbitrumCCIPBnM);
+        // 2) parse each part
+        flag        = _parseBool(parts[0]);
+        amount      = _toUint(parts[1]);
+        minEdgeBps  = _toUint(parts[2]);
+        maxGasGwei  = _toUint(parts[3]);
     }
 
-    /**
-     * @notice Manual trigger for testing
-     */
-    function manualTrigger() external onlyOwner returns (bytes32) {
-        return this.sendRequest();
-    }
-
-    /**
-     * @notice Store a test arbitrage plan for automation testing
-     * @dev This bypasses Functions and directly stores a plan to test automation
-     */
-    function storeTestPlan() external onlyOwner {
-        // Create test arbitrage plan
-        PlanStore.ArbitragePlan memory testPlan = PlanStore.ArbitragePlan({
-            execute: true,
-            amount: 1 ether, // 1 WETH
-            minEdgeBps: 50,   // 0.5%
-            maxGasGwei: 50,   // 50 gwei
-            timestamp: 0      // Will be set by PlanStore
-        });
-        
-        // Store plan in PlanStore - this will trigger automation!
-        planStore.fulfillPlan(abi.encode(testPlan));
-    }
-
-    /**
-     * @notice Converts address to hex string for Functions arguments
-     */
-    function toHexString(address addr) internal pure returns (string memory) {
-        bytes memory data = abi.encodePacked(addr);
-        bytes memory alphabet = "0123456789abcdef";
-        bytes memory str = new bytes(2 + data.length * 2);
-        str[0] = "0";
-        str[1] = "x";
-        for (uint256 i = 0; i < data.length; i++) {
-            str[2 + i * 2] = alphabet[uint256(uint8(data[i] >> 4))];
-            str[3 + i * 2] = alphabet[uint256(uint8(data[i] & 0x0f))];
+    /// @dev Splits a comma-separated string into 4 substrings
+    function _split4(string memory str)
+        internal
+        pure
+        returns (string[4] memory out)
+    {
+        bytes memory b = bytes(str);
+        uint256 start;
+        uint256 part;
+        for (uint256 i = 0; i <= b.length; i++) {
+            if (i == b.length || b[i] == ",") {
+                // slice [start..i)
+                bytes memory slice = new bytes(i - start);
+                for (uint256 j = start; j < i; j++) {
+                    slice[j - start] = b[j];
+                }
+                require(part < 4, "Too many fields");
+                out[part++] = string(slice);
+                start = i + 1;
+            }
         }
-        return string(str);
+        require(part == 4, "Wrong field count");
     }
 
-    /**
-     * @notice Get configuration info
-     */
-    function getConfig() external view returns (
-        uint64 _subscriptionId,
-        address _planStore,
-        address _ethereumPair,
-        address _arbitrumPair,
-        uint256 _lastRequestTimestamp,
-        uint256 _requestCount
-    ) {
-        return (
-            subscriptionId,
-            address(planStore),
-            ethereumPair,
-            arbitrumPair,
-            lastRequestTimestamp,
-            requestCount
-        );
+    /// @dev Convert decimal string to uint256
+    function _toUint(string memory s) internal pure returns (uint256 result) {
+        bytes memory b = bytes(s);
+        for (uint256 i = 0; i < b.length; i++) {
+            uint8 c = uint8(b[i]);
+            require(c >= 48 && c <= 57, "Invalid digit");
+            result = result * 10 + (c - 48);
+        }
     }
-} 
- 
->>>>>>> 32cc54e40a7cfef55c91f0af3cc41e29bec63e10
+
+    /// @dev Parse "true" or "false" into bool
+    function _parseBool(string memory s) internal pure returns (bool) {
+        bytes memory b = bytes(s);
+        if (b.length == 4 &&
+            b[0] == "t" && b[1] == "r" &&
+            b[2] == "u" && b[3] == "e"
+        ) {
+            return true;
+        }
+        if (b.length == 5 &&
+            b[0] == "f" && b[1] == "a" &&
+            b[2] == "l" && b[3] == "s" &&
+            b[4] == "e"
+        ) {
+            return false;
+        }
+        revert("Invalid bool");
+    }
+}

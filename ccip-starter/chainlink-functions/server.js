@@ -1,20 +1,22 @@
 import express from 'express'
 import fetch from 'node-fetch'
+import { Buffer } from 'buffer'
 
 const app = express()
 const PORT = process.env.PORT || 3000
 
 // RPC & Groq configs from env
-const ETHEREUM_RPC   = "https://eth-sepolia.g.alchemy.com/v2/xiJw6cj_7U8PXLSncrSON78PWDXP4Dkl"
+const ETHEREUM_RPC    = "https://eth-sepolia.g.alchemy.com/v2/xiJw6cj_7U8PXLSncrSON78PWDXP4Dkl"
 const ARBITRUM_RPC    = "https://arb-sepolia.g.alchemy.com/v2/xiJw6cj_7U8PXLSncrSON78PWDXP4Dkl"
 const GROQ_API_KEY    = "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"
 const GROQ_API_URL    = 'https://api.groq.com/openai/v1/chat/completions'
 const GET_RESERVES_ABI = '0x0902f1ac'
 
+// Simple JSON-RPC eth_call helper
 async function rpcCall(rpcUrl, to, data) {
   const res = await fetch(rpcUrl, {
     method: 'POST',
-    headers: {'Content-Type':'application/json'},
+    headers: { 'Content-Type':'application/json' },
     body: JSON.stringify({
       jsonrpc: '2.0',
       method: 'eth_call',
@@ -27,10 +29,11 @@ async function rpcCall(rpcUrl, to, data) {
   return j.result
 }
 
+// Fetch current gas price
 async function gasPrice(rpcUrl) {
   const res = await fetch(rpcUrl, {
     method: 'POST',
-    headers: {'Content-Type':'application/json'},
+    headers: { 'Content-Type':'application/json' },
     body: JSON.stringify({
       jsonrpc: '2.0',
       method: 'eth_gasPrice',
@@ -43,34 +46,43 @@ async function gasPrice(rpcUrl) {
   return BigInt(j.result)
 }
 
+// Decode Uniswap V2 reserves from the eth_call hex
 function decodeReserves(hex) {
   if (hex.startsWith('0x')) hex = hex.slice(2)
   return {
-    r0: BigInt('0x'+hex.slice(0,64)),
-    r1: BigInt('0x'+hex.slice(64,128))
+    r0: BigInt('0x' + hex.slice(0, 64)),
+    r1: BigInt('0x' + hex.slice(64, 128))
   }
 }
 
+// Core arbitrage decision logic
 async function decideArbitrage(ethPair, arbPair) {
-  // 1. fetch reserves
+  // 1) fetch reserves in parallel
   const [eHex, aHex] = await Promise.all([
     rpcCall(ETHEREUM_RPC, ethPair, GET_RESERVES_ABI),
     rpcCall(ARBITRUM_RPC,  arbPair, GET_RESERVES_ABI)
   ])
-  const {r0:e0,r1:e1} = decodeReserves(eHex)
-  const {r0:a0,r1:a1} = decodeReserves(aHex)
-  const pE = Number(e1)/Number(e0), pA = Number(a1)/Number(a0)
-  const edge = pA>pE ? (pA-pE)*10000/pE : (pE-pA)*10000/pA
+  const { r0: e0, r1: e1 } = decodeReserves(eHex)
+  const { r0: a0, r1: a1 } = decodeReserves(aHex)
+
+  // compute price and edge bps
+  const pE   = Number(e1) / Number(e0)
+  const pA   = Number(a1) / Number(a0)
+  const edge = pA > pE
+    ? (pA - pE) * 10000 / pE
+    : (pE - pA) * 10000 / pA
+
   if (!isFinite(edge)) throw new Error('Invalid reserves')
 
-  // 2. fetch gas
-  const [gE,gA] = await Promise.all([
+  // 2) fetch gas prices
+  const [gE, gA] = await Promise.all([
     gasPrice(ETHEREUM_RPC),
     gasPrice(ARBITRUM_RPC)
   ])
-  const ge = Number(gE)/1e9, ga = Number(gA)/1e9
+  const ge = Number(gE) / 1e9
+  const ga = Number(gA) / 1e9
 
-  // 3. build prompt
+  // 3) build prompt for the LLM
   const prompt = `
 You are an arbitrage analyzer.
 ETH price: ${pE}
@@ -85,7 +97,7 @@ Respond with JSON:
 {"execute":bool,"amount":"wei","minEdgeBps":50,"maxGasGwei":50}
 `
 
-  // 4. call Groq
+  // 4) call Groq chat completion
   const llmRes = await fetch(GROQ_API_URL, {
     method: 'POST',
     headers: {
@@ -104,6 +116,8 @@ Respond with JSON:
   console.log('LLM response:', llmJ)
   const text = llmJ.choices?.[0]?.message?.content
   if (!text) throw new Error('No response from Groq')
+
+  // extract JSON substring
   const m = text.match(/\{[\s\S]*\}/)
   if (!m) throw new Error('No JSON in LLM response')
   return JSON.parse(m[0])
@@ -115,8 +129,14 @@ app.get('/api/analyze', async (req, res) => {
     if (!ethPair || !arbPair) {
       return res.status(400).json({ error: 'Missing ethPair or arbPair' })
     }
+
     const decision = await decideArbitrage(ethPair, arbPair)
-    res.json(decision)
+
+    // build a comma-separated CSV string of all four values
+    const csv = `${decision.execute},${decision.amount},${decision.minEdgeBps},${decision.maxGasGwei}`
+
+    // return full JSON including the new csv field
+    res.json({ ...decision, csv })
   } catch (e) {
     res.status(500).json({ error: e.message })
   }
