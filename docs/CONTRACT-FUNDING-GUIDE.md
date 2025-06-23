@@ -413,3 +413,4 @@ cast send $CCIP_BNM_ADDRESS "drip(address)" $BUNDLE_EXECUTOR_ADDRESS --private-k
 - [ ] Top up balances if needed for next execution
 
 This comprehensive funding guide ensures you never miss any funding requirements and can quickly resolve any funding issues that arise during arbitrage execution! 🚀
+ 

@@ -8,7 +8,7 @@ export ARBITRUM_SEPOLIA_RPC_URL=https://arb-sepolia.g.alchemy.com/v2/xiJw6cj_7U8
 
 export BUNDLE_EXECUTOR=0xB20412c4403277A6dD64e0D0dCa19F81b5412cBA
 export PLAN_STORE=0x1177D6F59e9877D6477743C6961988D86ee78174
-export FUNCTIONS_CONSUMER=0x2eEbcC4807A0a8C95610E764369D0eeCEC5a655f
+export FUNCTIONS_CONSUMER=0x25283D41044b166169c16204B14383ADa6C03DfC
 export REMOTE_EXECUTOR=0x45ee7AA56775aB9385105393458FC4e56b4B578c
 ```
 
@@ -42,6 +42,8 @@ cast call $PLAN_STORE "bundleExecutor()" --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
 cast send $PLAN_STORE "setBundleExecutor(address)" $BUNDLE_EXECUTOR \
   --private-key $PRIVATE_KEY \
   --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+
+cast send --private-key $PRIVATE_KEY $PLAN_STORE "setFunctionsConsumer(address)" $FUNCTIONS_CONSUMER \ --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
 
 # Verify Functions Consumer is set correctly
 cast call $PLAN_STORE "functionsConsumer()" --rpc-url $ETHEREUM_SEPOLIA_RPC_URL

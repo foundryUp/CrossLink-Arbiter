@@ -18,7 +18,7 @@ This guide documents the complete deployment process for the Chainlink cross-cha
 export PRIVATE_KEY=0x9971812261ecfc8d83860eaceff14ab42748678da818e0ab8a586f6dde6adb2d
 export ETHEREUM_SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/xiJw6cj_7U8PXLSncrSON78PWDXP4Dkl
 export ARBITRUM_SEPOLIA_RPC_URL=https://arb-sepolia.g.alchemy.com/v2/xiJw6cj_7U8PXLSncrSON78PWDXP4Dkl
-export FUNCTIONS_CONSUMER_ADDRESS=0x2eEbcC4807A0a8C95610E764369D0eeCEC5a655f
+export FUNCTIONS_CONSUMER_ADDRESS=0x25283D41044b166169c16204B14383ADa6C03DfC
 export TREASURY_ADDRESS=0x28ea4eF61ac4cca3ed6A64dBb5b2D4be1aDC9814
 ```
 
@@ -640,3 +640,4 @@ cast send $FUNCTIONS_CONSUMER_ADDRESS "storeTestPlan()" --private-key $PRIVATE_K
    ```
 
 This deployment successfully resolves the circular dependency issue and provides a robust, secure foundation for the cross-chain arbitrage system with comprehensive monitoring, debugging capabilities, and complete CCIP message tracking.
+ 

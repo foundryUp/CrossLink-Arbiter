@@ -172,9 +172,11 @@ contract ArbFlowTest is Test {
             arbitrumCCIPBnM, // Use CCIP-BnM test token for cross-chain transfers
             address(arbitrumRouter02),
             treasury,
-            predictedBundleExecutor, // Use predicted address
             ethereumChainSelector 
         );
+
+        // Set the predicted BundleExecutor address
+        remoteExecutor.setAuthorizedSender(predictedBundleExecutor);
         
         vm.stopPrank();
         
@@ -187,13 +189,15 @@ contract ArbFlowTest is Test {
             address(ethereumRouter),
             address(ethereumLinkToken),
             arbitrumChainSelector,
-            address(remoteExecutor), // Use actual RemoteExecutor address
             address(ethereumWETH),
             ethereumCCIPBnM, // Use CCIP-BnM test token for cross-chain transfers
             address(ethereumRouter02),
             ethereumPair, // Ethereum WETH/CCIP-BnM pair address
             arbitrumPair  // Arbitrum WETH/CCIP-BnM pair address
         );
+
+        // Set the RemoteExecutor address
+        bundleExecutor.setRemoteExecutor(address(remoteExecutor));
         
         // Verify the predicted address matches the actual address
         require(address(bundleExecutor) == predictedBundleExecutor, "Address prediction failed");
