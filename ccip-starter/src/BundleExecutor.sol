@@ -30,42 +30,46 @@ contract BundleExecutor is AutomationCompatibleInterface, Withdraw {
 
     /// @notice PlanStore contract that contains arbitrage plans
     PlanStore public immutable planStore;
-    
+
     /// @notice CCIP Router for cross-chain messaging
     IRouterClient public immutable ccipRouter;
-    
+
     /// @notice LINK token for CCIP fees
     LinkTokenInterface public immutable linkToken;
-    
+
     /// @notice Destination chain selector for Arbitrum Sepolia
     uint64 public immutable destinationChainSelector;
-    
+
     /// @notice Remote executor address on Arbitrum - Now mutable to fix circular dependency
     address public remoteExecutor;
-    
+
     /// @notice Flag to ensure remote executor can only be set once
     bool public remoteExecutorSet;
-    
+
     /// @notice WETH token address
     address public immutable weth;
-    
+
     /// @notice CCIP-BnM token address (cross-chain token)
     address public immutable ccipBnM;
-    
+
     /// @notice Uniswap V2 Router address
     address public immutable uniswapRouter;
-    
+
     /// @notice Ethereum WETH/CCIP-BnM pair address
     address public immutable ethereumPair;
-    
+
     /// @notice Arbitrum WETH/CCIP-BnM pair address
     address public immutable arbitrumPair;
-    
+
     /// @notice Maximum gas price for execution (in wei)
     uint256 public maxGasPrice = 50 gwei;
-    
+
     /// @notice Events
-    event ArbitrageExecuted(uint256 wethAmount, uint256 usdcAmount, bytes32 ccipMessageId);
+    event ArbitrageExecuted(
+        uint256 wethAmount,
+        uint256 usdcAmount,
+        bytes32 ccipMessageId
+    );
     event MaxGasPriceUpdated(uint256 newMaxGasPrice);
     event RemoteExecutorSet(address indexed remoteExecutor);
 
@@ -119,10 +123,10 @@ contract BundleExecutor is AutomationCompatibleInterface, Withdraw {
     function setRemoteExecutor(address _remoteExecutor) external onlyOwner {
         if (remoteExecutorSet) revert RemoteExecutorAlreadySet();
         if (_remoteExecutor == address(0)) revert ZeroAddress();
-        
+
         remoteExecutor = _remoteExecutor;
         remoteExecutorSet = true;
-        
+
         emit RemoteExecutorSet(_remoteExecutor);
     }
 
@@ -144,20 +148,25 @@ contract BundleExecutor is AutomationCompatibleInterface, Withdraw {
      */
     function checkUpkeep(
         bytes calldata /* checkData */
-    ) external view override returns (bool upkeepNeeded, bytes memory performData) {
+    )
+        external
+        view
+        override
+        returns (bool upkeepNeeded, bytes memory performData)
+    {
         // Check if remote executor is set
         if (!remoteExecutorSet) return (false, "");
-        
+
         // Check if there's a valid arbitrage plan
         bool shouldExecute = planStore.shouldExecute();
-        
+
         // Check gas price constraint
         bool gasOk = tx.gasprice <= maxGasPrice;
-        
+
         // Check if we have sufficient WETH balance
         PlanStore.ArbitragePlan memory plan = planStore.getCurrentPlan();
         bool balanceOk = IERC20(weth).balanceOf(address(this)) >= plan.amount;
-        
+
         upkeepNeeded = shouldExecute && gasOk && balanceOk;
         performData = "";
     }
@@ -168,17 +177,18 @@ contract BundleExecutor is AutomationCompatibleInterface, Withdraw {
      */
     function performUpkeep(bytes calldata /* performData */) external override {
         if (!remoteExecutorSet) revert RemoteExecutorNotSet();
-        
+
         PlanStore.ArbitragePlan memory plan = planStore.getCurrentPlan();
-        
+
         // Verify execution conditions
         if (!planStore.shouldExecute()) revert("No valid plan");
         if (tx.gasprice > maxGasPrice) revert GasPriceTooHigh();
-        if (IERC20(weth).balanceOf(address(this)) < plan.amount) revert InsufficientBalance();
-        
+        if (IERC20(weth).balanceOf(address(this)) < plan.amount)
+            revert InsufficientBalance();
+
         // Execute the arbitrage
         _executeArbitrage(plan);
-        
+
         // Clear the plan to prevent re-execution
         planStore.clearPlan();
     }
@@ -189,17 +199,25 @@ contract BundleExecutor is AutomationCompatibleInterface, Withdraw {
      */
     function _executeArbitrage(PlanStore.ArbitragePlan memory plan) internal {
         // Step 1: Swap WETH to CCIP-BnM on Ethereum Sepolia
-        uint256 ccipBnMAmount = _swapWETHtoCCIPBnM(plan.amount);
-        
+        address;
+        path[0] = weth;
+        path[1] = ccipBnM;
+
+        uint256[] memory amountsOut = IUniswapV2Router(uniswapRouter)
+            .getAmountsOut(plan.amount, path);
+        uint256 amountOutMin = (amountsOut[1] * 995) / 1000; // 0.5% slippage guard
+
+        uint256 ccipBnMAmount = _swapWETHtoCCIPBnM(plan.amount, amountOutMin);
+
         // Step 2: Prepare CCIP message with CCIP-BnM and remote swap instructions
         bytes memory remoteSwapData = abi.encode(
             ccipBnMAmount,
             block.timestamp + 3600 // 1 hour deadline
         );
-        
+
         // Step 3: Send CCIP-BnM + instructions to Arbitrum via CCIP
         bytes32 messageId = _sendCCIPMessage(ccipBnMAmount, remoteSwapData);
-        
+
         emit ArbitrageExecuted(plan.amount, ccipBnMAmount, messageId);
     }
 
@@ -208,35 +226,35 @@ contract BundleExecutor is AutomationCompatibleInterface, Withdraw {
      * @param wethAmount Amount of WETH to swap
      * @return ccipBnMAmount Amount of CCIP-BnM received
      */
-    function _swapWETHtoCCIPBnM(uint256 wethAmount) internal returns (uint256 ccipBnMAmount) {
-        // Approve Uniswap router to spend WETH
+    function _swapWETHtoCCIPBnM(
+        uint256 wethAmount,
+        uint256 minOut
+    ) internal returns (uint256 ccipBnMAmount) {
         IERC20(weth).safeApprove(uniswapRouter, wethAmount);
-        
-        // Prepare swap path: WETH -> CCIP-BnM
-        address[] memory path = new address[](2);
+
+        address;
         path[0] = weth;
         path[1] = ccipBnM;
-        
-        // Record CCIP-BnM balance before swap
+
         uint256 ccipBnMBefore = IERC20(ccipBnM).balanceOf(address(this));
-        
-        // Execute swap
-        try IUniswapV2Router(uniswapRouter).swapExactTokensForTokens(
-            wethAmount,
-            0, // Accept any amount of CCIP-BnM
-            path,
-            address(this),
-            block.timestamp + 300 // 5 minute deadline
-        ) returns (uint256[] memory amounts) {
+
+        try
+            IUniswapV2Router(uniswapRouter).swapExactTokensForTokens(
+                wethAmount,
+                minOut, 
+                path,
+                address(this),
+                block.timestamp + 120
+            )
+        returns (uint256[] memory amounts) {
             ccipBnMAmount = amounts[1];
         } catch {
             revert SwapFailed();
         }
-        
-        // Verify we received CCIP-BnM
+
         uint256 ccipBnMAfter = IERC20(ccipBnM).balanceOf(address(this));
         require(ccipBnMAfter > ccipBnMBefore, "No CCIP-BnM received");
-        
+
         ccipBnMAmount = ccipBnMAfter - ccipBnMBefore;
     }
 
@@ -252,14 +270,15 @@ contract BundleExecutor is AutomationCompatibleInterface, Withdraw {
     ) internal returns (bytes32 messageId) {
         // Approve CCIP router to spend CCIP-BnM
         IERC20(ccipBnM).safeApprove(address(ccipRouter), ccipBnMAmount);
-        
+
         // Prepare token transfer
-        Client.EVMTokenAmount[] memory tokenAmounts = new Client.EVMTokenAmount[](1);
+        Client.EVMTokenAmount[]
+            memory tokenAmounts = new Client.EVMTokenAmount[](1);
         tokenAmounts[0] = Client.EVMTokenAmount({
             token: ccipBnM,
             amount: ccipBnMAmount
         });
-        
+
         // Prepare CCIP message
         Client.EVM2AnyMessage memory message = Client.EVM2AnyMessage({
             receiver: abi.encode(remoteExecutor),
@@ -273,13 +292,15 @@ contract BundleExecutor is AutomationCompatibleInterface, Withdraw {
             ),
             feeToken: address(linkToken)
         });
-        
+
         // Calculate and pay CCIP fees
         uint256 fees = ccipRouter.getFee(destinationChainSelector, message);
         linkToken.approve(address(ccipRouter), fees);
-        
+
         // Send CCIP message
-        try ccipRouter.ccipSend(destinationChainSelector, message) returns (bytes32 msgId) {
+        try ccipRouter.ccipSend(destinationChainSelector, message) returns (
+            bytes32 msgId
+        ) {
             messageId = msgId;
         } catch {
             revert CCIPSendFailed();
@@ -292,7 +313,11 @@ contract BundleExecutor is AutomationCompatibleInterface, Withdraw {
      * @param to Recipient address
      * @param amount Amount to withdraw
      */
-    function emergencyWithdraw(address token, address to, uint256 amount) external onlyOwner {
+    function emergencyWithdraw(
+        address token,
+        address to,
+        uint256 amount
+    ) external onlyOwner {
         IERC20(token).safeTransfer(to, amount);
     }
 }
@@ -308,8 +333,9 @@ interface IUniswapV2Router {
         address to,
         uint deadline
     ) external returns (uint[] memory amounts);
-    
-    function getAmountsOut(uint amountIn, address[] calldata path)
-        external view returns (uint[] memory amounts);
-} 
- 
+
+    function getAmountsOut(
+        uint amountIn,
+        address[] calldata path
+    ) external view returns (uint[] memory amounts);
+}
