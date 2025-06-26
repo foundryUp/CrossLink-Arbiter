@@ -1,0 +1,27 @@
+{
+    "name": "arbitrage-functions-api",
+    "version": "1.0.0",
+    "description": "Arbitrage decision API using Amazon Bedrock",
+    "main": "arbitrage-functions.js",
+    "type": "module",
+    "scripts": {
+      "start": "node arbitrage-functions.js",
+      "dev": "nodemon arbitrage-functions.js"
+    },
+    "dependencies": {
+      "express": "^4.18.2",
+      "node-fetch": "^3.3.2",
+      "@aws-sdk/client-bedrock-runtime": "^3.462.0"
+    },
+    "devDependencies": {
+      "nodemon": "^3.0.2"
+    },
+    "keywords": [
+      "arbitrage",
+      "bedrock",
+      "api",
+      "express"
+    ],
+    "author": "Hackathon Team",
+    "license": "MIT"
+  } 
