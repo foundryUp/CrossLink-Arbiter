@@ -47,7 +47,7 @@ contract ArbitrageFunctionsConsumer is FunctionsClient, ConfirmedOwner {
     string source =
         "const characterId = args[0];"
         "const apiResponse = await Functions.makeHttpRequest({"
-        "url: `https://a8d9-58-84-62-158.ngrok-free.app/api/analyze?ethPair=0xd7471664f91C43c5c3ed2B06734b4a392D94Fe16&arbPair=0xAc6D3a904c37c4B75F1823d1B0238d6d48D8bfB3`"
+        "url: `https://chainlink-hackathon.onrender.com/api/analyze?ethPair=0xd7471664f91C43c5c3ed2B06734b4a392D94Fe16&arbPair=0xAc6D3a904c37c4B75F1823d1B0238d6d48D8bfB3`"
         "});"
         "if (apiResponse.error) {"
         "throw Error('Request failed');"
