@@ -1,0 +1,18 @@
+[submodule "ccip-starter/lib/forge-std"]
+	path = ccip-starter/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "ccip-starter/lib/openzeppelin-contracts"]
+	path = ccip-starter/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "ccip-starter/lib/chainlink-evm"]
+	path = ccip-starter/lib/chainlink-evm
+	url = https://github.com/smartcontractkit/chainlink-evm
+[submodule "ccip-starter/lib/chainlink-ccip"]
+	path = ccip-starter/lib/chainlink-ccip
+	url = https://github.com/smartcontractkit/chainlink-ccip
+[submodule "ccip-starter/lib/foundry-chainlink-toolkit"]
+	path = ccip-starter/lib/foundry-chainlink-toolkit
+	url = https://github.com/smartcontractkit/foundry-chainlink-toolkit
+[submodule "ccip-starter/lib/solmate"]
+	path = ccip-starter/lib/solmate
+	url = https://github.com/transmissions11/solmate
