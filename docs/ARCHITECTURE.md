@@ -141,48 +141,8 @@ sequenceDiagram
 
 ### **High-Level System Overview with Contract Integration**
 
-```mermaid
-graph TB
-    subgraph "Off-Chain Layer"
-        API["CrossLink AI API<br/>Amazon Bedrock Analysis<br/>Market Data Processing<br/>Price Spread Calculation<br/>AI Decision Making"]
-        FUNCTIONS["Chainlink Functions DON<br/>Decentralized Oracle Network<br/>HTTP Request Execution<br/>Response Validation"]
-        CCIP_NET["Chainlink CCIP Network<br/>Cross-Chain Messaging<br/>Token Transfer Protocol<br/>Message Verification"]
-        AUTOMATION["Chainlink Automation<br/>Upkeep Monitoring (30s intervals)<br/>Condition Validation<br/>Autonomous Execution"]
-    end
-    
-    subgraph "Ethereum Sepolia - Source Chain"
-        TIMER["Timer Trigger<br/>Every 5 Minutes"]
-        AFC["ArbitrageFunctionsConsumer.sol<br/>sendRequest() every 5 min<br/>Calls Chainlink Functions<br/>Receives AI arbitrage plan<br/>Parses CSV response<br/>Auto-triggers plan storage"]
-        PS["PlanStore.sol<br/>fulfillPlan() from Consumer<br/>Stores execution parameters<br/>Plan expiry: 5 minutes<br/>shouldExecute() validation<br/>Plan clearance after execution"]
-        BE["BundleExecutor.sol<br/>checkUpkeep() monitors PlanStore<br/>Validates: balance, gas, plan validity<br/>performUpkeep() executes arbitrage<br/>Swaps WETH to CCIP-BnM<br/>Sends cross-chain message + tokens"]
-        UNIV2_ETH["Uniswap V2 (ETH)<br/>WETH/CCIP-BnM Pool<br/>Source chain liquidity<br/>AMM swap execution"]
-    end
-    
-    subgraph "Arbitrum Sepolia - Destination Chain"
-        RE["RemoteExecutor.sol<br/>ccipReceive() handles messages<br/>Validates sender & chain<br/>Swaps CCIP-BnM to WETH<br/>Calculates & transfers profit<br/>Completes arbitrage cycle"]
-        UNIV2_ARB["Uniswap V2 (ARB)<br/>WETH/CCIP-BnM Pool<br/>Destination chain liquidity<br/>Final swap execution"]
-        TREASURY["Treasury Wallet<br/>Receives arbitrage profits<br/>Revenue accumulation<br/>Protocol treasury"]
-    end
-    
-    TIMER -->|"Triggers every 5 min"| AFC
-    AFC -->|"1. sendRequest() HTTP call"| FUNCTIONS
-    FUNCTIONS -->|"2. Makes API call"| API
-    API -->|"3. Returns AI decision CSV"| FUNCTIONS
-    FUNCTIONS -->|"4. fulfillRequest() callback"| AFC
-    AFC -->|"5. storeParsedPlan() auto-execution"| PS
-    PS -->|"6. Plan available trigger"| AUTOMATION
-    AUTOMATION -->|"7. checkUpkeep() every 30s"| BE
-    BE -->|"8. performUpkeep() execution"| BE
-    BE -->|"9. Swap WETH to CCIP-BnM"| UNIV2_ETH
-    BE -->|"10. CCIP send (tokens + data)"| CCIP_NET
-    CCIP_NET -->|"11. Cross-chain delivery"| RE
-    RE -->|"12. Swap CCIP-BnM to WETH"| UNIV2_ARB
-    RE -->|"13. Transfer profit"| TREASURY
-    
-    FUNCTIONS -.->|"Decentralized Compute"| AFC
-    AUTOMATION -.->|"Autonomous Monitoring"| BE
-    CCIP_NET -.->|"Secure Cross-Chain"| RE
-```
+![CrossLink Arbitor Complete System Architecture](../img/system-architecture-flow.png)
+*Complete autonomous cross-chain arbitrage system showing the full execution flow from market analysis to profit distribution*
 
 ### **Detailed Contract Flow & Responsibilities**
 
