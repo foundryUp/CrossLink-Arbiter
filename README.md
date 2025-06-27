@@ -120,14 +120,6 @@ CrossLink Arbitor is a **fully autonomous arbitrage protocol** that:
 > 📖 **[Complete Deployment Guide](docs/COMPLETE-DEPLOYMENT-GUIDE.md)** - Step-by-step instructions for deployment, funding, testing, and troubleshooting
 ---
 
-## 📚 **Documentation Links**
-
-- 📖 **[Technical Architecture](docs/ARCHITECTURE.md)** - Complete system design, flow diagrams, and components
-- 🚀 **[Complete Deployment Guide](docs/COMPLETE-DEPLOYMENT-GUIDE.md)** - Step-by-step deployment, funding, testing, and troubleshooting
-- 🔧 **[Deployment Details](docs/DEPLOYMENT-DETAILS.md)** - All contract addresses and live system info
-- 🎯 **[Hackathon Pitch](docs/HACKATHON-PITCH.md)** - Presentation materials
-
----
 
 ## 🏆 **Key Features & Innovations**
 
@@ -185,19 +177,6 @@ We welcome contributions! Please see our contributing guidelines:
 
 ---
 
-## 📞 **Support & Community**
-
-### **🌐 Live Links**
-- **Demo**: [https://chainlink-hackathon.onrender.com](https://chainlink-hackathon.onrender.com)
-- **CCIP Explorer**: [https://ccip.chain.link/](https://ccip.chain.link/)
-
-### **🔗 Social & Code**
-- **GitHub**: [Repository](https://github.com/your-username/crosslink-arbitor)
-- **Twitter**: [@CrossLinkArbitor](https://twitter.com/crosslinkarbitor) 
-- **Discord**: [Join Community](https://discord.gg/crosslink)
-- **Telegram**: [Discussion Group](https://t.me/crosslinkarbitor)
-
----
 
 ## 📄 **License**
 
