@@ -42,12 +42,11 @@ contract ArbitrageFunctionsConsumer is FunctionsClient, ConfirmedOwner {
     address router = 0xb83E47C2bC239B3bf370bc41e1459A34b41238D0;
 
     // JavaScript source code
-    // Fetch character name from the Star Wars API.
-    // Documentation: https://swapi.info/people
+    // Fetch arbitrage analysis from the deployed API
     string source =
         "const characterId = args[0];"
         "const apiResponse = await Functions.makeHttpRequest({"
-        "url: `https://chainlink-hackathon.onrender.com/api/analyze?ethPair=0xd7471664f91C43c5c3ed2B06734b4a392D94Fe16&arbPair=0xAc6D3a904c37c4B75F1823d1B0238d6d48D8bfB3`"
+        "url: 'https://chainlink-hackathon.onrender.com/api/analyze?ethPair=0xd7471664f91C43c5c3ed2B06734b4a392D94Fe16&arbPair=0xAc6D3a904c37c4B75F1823d1B0238d6d48D8bfB3'"
         "});"
         "if (apiResponse.error) {"
         "throw Error('Request failed');"
@@ -82,7 +81,7 @@ contract ArbitrageFunctionsConsumer is FunctionsClient, ConfirmedOwner {
     function sendRequest(
         // uint64 subscriptionId
         // string[] calldata args
-    ) external onlyOwner returns (bytes32 requestId) {
+    ) external returns (bytes32 requestId) {
         FunctionsRequest.Request memory req;
         req.initializeRequestForInlineJavaScript(source); // Initialize the request with JS code
         // if (args.length > 0) req.setArgs(args); // Set the arguments for the request
@@ -119,6 +118,15 @@ contract ArbitrageFunctionsConsumer is FunctionsClient, ConfirmedOwner {
 
         // Emit an event to log the response
         emit Response(requestId, character, s_lastResponse, s_lastError);
+
+        // If we have a successful response, automatically parse and store the plan
+        if (err.length == 0 && response.length > 0) {
+            try this.storeParsedPlan() {
+                // Plan stored successfully
+            } catch {
+                // Plan storage failed - could emit an error event here
+            }
+        }
     }
     function splitAndParse()
         public
@@ -141,7 +149,7 @@ contract ArbitrageFunctionsConsumer is FunctionsClient, ConfirmedOwner {
         maxGasGwei  = _toUint(parts[3]);
     }
 
-    function storeParsedPlan() external  {
+    function storeParsedPlan() public  {
         // Using mocksplitAndParse() during testing
         (bool flag, uint256 amount, uint256 minEdgeBps, uint256 maxGasGwei) = splitAndParse();
 

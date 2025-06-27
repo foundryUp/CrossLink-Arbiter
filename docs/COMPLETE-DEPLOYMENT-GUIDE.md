@@ -18,7 +18,7 @@ This guide documents the complete deployment process for the Chainlink cross-cha
 export PRIVATE_KEY=0x9971812261ecfc8d83860eaceff14ab42748678da818e0ab8a586f6dde6adb2d
 export ETHEREUM_SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/xiJw6cj_7U8PXLSncrSON78PWDXP4Dkl
 export ARBITRUM_SEPOLIA_RPC_URL=https://arb-sepolia.g.alchemy.com/v2/xiJw6cj_7U8PXLSncrSON78PWDXP4Dkl
-export FUNCTIONS_CONSUMER_ADDRESS=0x25283D41044b166169c16204B14383ADa6C03DfC
+export FUNCTIONS_CONSUMER_ADDRESS=0x59c6AC86b75Caf8FC79782F79C85B8588211b6C2
 export TREASURY_ADDRESS=0x28ea4eF61ac4cca3ed6A64dBb5b2D4be1aDC9814
 ```
 
